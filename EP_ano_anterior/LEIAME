@@ -1,0 +1,66 @@
+
+----INSTALAÇÃO
+  Para rodar o EP, basta copiar todos os arquivos necessários (*.rb) no diretório
+  desejado e rodar o comando:
+
+  make
+
+  OU, execute diretamente o comando:
+
+  chmod +x ep3.rb
+
+  Em seguida, basta executar diretamente através do comando:
+
+  ./ep3.rb
+
+  >>>>>>>>>>>>>>>>>>>>>>>>>>>ATENÇÃO!!
+    Este EP foi desenvolvido em Ruby, na versão *2.2.3p173*
+    Certifique-se de que a versão usada no momento de rodá-lo é compatível.
+    Caso, contrário, instale a versão correta.
+
+    Se você não possui o Ruby 2.2.3p117, siga os seguintes passos:
+
+    1) Faça o download do pacote através do seguinte endereço:
+      https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.3.tar.bz2
+      Observação: este endereço foi retirado da página oficial do Ruby.
+
+    2) Extraia o arquivo .tar.bz2
+
+    3) Acesse o diretório onde você extraiu o arquivo.
+
+    4) Execute os seguintes comandos:
+
+      ./configure
+      make
+
+    5) Para confirmar se está usando a versão correta, rode o seguinte comando:
+
+      ruby -v
+
+    Se você já estava usando uma outra versão de Ruby e a instalação da nova
+    versão não foi bem sucedida, recomenda-se usar o pacote RVM (Ruby Version
+    Manager). Mais informações sobre como instalá-lo e como mudar a versão do
+    Ruby neste link: https://rvm.io/
+  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+----CONSIDERAÇÕES SOBRE A IMPLEMENTAÇÃO
+
+  Os primeiros blocos do sistema, ou seja, os blocos que não podem ser deletados, são descritos abaixo:
+  - Superblock: Número de bytes de cada bloco(armazenado em 2 bytes) e numero total de blocos do sistema(armazenador em 2 bytes). Esse bloco tem tamanho de 4kb.
+  - FAT (13 blocos, 52kb)
+  - Gerenciador (1 bloco, 4kb) 
+  - Root (3 blocos, 12kb)
+  Concluindo temos 18 blocos ou 72kb no início do programa que não podem ser deletados.
+
+  A implementação dos metadados dos arquivos dentro de cada diretório segue a seguinte lógica:
+  - O nome do arquivo + extensao = 16 caracteres (16 bytes)
+  - O tamanho será um inteiro de 4 bytes
+  - A data de criação será um inteiro de 4 bytes
+  - A data de modificação será um inteiro de 4 bytes
+  - A data de ultimo acesso será um inteiro de 4 bytes
+  - O primeiro bloco que esse arquivo ocupa será identificado por um inteiro de 4 bytes 
+  Portanto cada arquivo no diretório ocupará 36 bytes e dado que um bloco tem 4kb, podemos ter 111 arquivos ou diretórios dentro de um diretório.
+
+  
+  O disco é por padrão com tamanho de 100Mb e optamos por criar o arquivo com os 100Mb ao invés de ir expandindo ele ao longo do tempo
+
