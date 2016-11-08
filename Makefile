@@ -1,4 +1,4 @@
-all: ep2
+all: ep3
 
-ep2:
-	chmod a+x ep2.rb
+ep3:
+	chmod a+x ep3.rb
