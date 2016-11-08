@@ -1,0 +1,21 @@
+Professor,
+
+Quando um processo de tamanho 30 bytes chega no instante t0, eu devo colocá-lo na lista da memoria virtual:
+
+1) apenas os 30 bytes em um segmento
+
+Ex:  lista -> P | 0 | 30
+
+2) os 32 bytes em um segmento (já que as páginas tem tamanho 16 bytes) 
+
+Ex:  lista -> P | 0 | 32
+
+3) 16 bytes em um segmento e mais 16 bytes em outro segmento (representando as 2 páginas)
+
+Ex:  lista -> P | 0 | 16 -> P | 0 | 16
+
+Além disso, preciso criar a lista ligada para a memória Física?
+
+Grato,
+
+Ricardo

@@ -1,0 +1,8 @@
+TODO
+
+Implementar os algoritmos de substituição de página
+
+Verificar o tamanho de bytes do processo - como dava certo antes, se o acesso
+era feito a um byte maior que a quantidade dada ao processo?
+
+Alguns arquivos de teste para a apresentação

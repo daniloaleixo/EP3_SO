@@ -14,14 +14,16 @@
 # basta que voltemos no passado, por exemplo acessar a chave (Tn – 3) e atualizar
 # as páginas dizendo se foram ou não acessadas.
 
-class File
-  attr_accessor :name, :size, :time_created, :time_modified, :time_accessed
+class TimeEvent
+  attr_accessor :t0, :mode, :process_name, :number_of_bytes,
+                :pid, :memory_position
 
   def initialize(opts={})
-    @name = opts[:name] unless opts[:name].nil?
-    @size = opts[:size] unless opts[:size].nil?
-    @time_created = opts[:time_created] unless opts[:time_created].nil?
-    @time_modified = opts[:time_modified] unless opts[:time_modified].nil?
-    @time_accessed = opts[:time_accessed] unless opts[:time_accessed].nil?
+    @t0 = opts[:t0] unless opts[:t0].nil?
+    @mode = opts[:mode] unless opts[:mode].nil?
+    @process_name = opts[:process_name] unless opts[:process_name].nil?
+    @number_of_bytes = opts[:number_of_bytes] unless opts[:number_of_bytes].nil?
+    @pid = opts[:pid] unless opts[:pid].nil?
+    @memory_position = opts[:memory_position] unless opts[:memory_position].nil?
   end
 end

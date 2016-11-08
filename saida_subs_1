@@ -1,0 +1,43 @@
+Início
+[255, 255, 255]
+[-1, -1, -1]
+
+#<TimeEvent:0x000000020c70b8 @t0=1, @mode=:add_process, @process_name="process1", @number_of_bytes=200, @pid=1>
+[255, 255, 255]
+[-1, -1, -1]
+
+#<TimeEvent:0x000000020c6ff0 @t0=1, @mode=:memory_access, @pid=1, @memory_position=1>
+[1, 255, 255]
+[0, -1, -1]
+
+#<TimeEvent:0x000000020c6fa0 @t0=1, @mode=:memory_access, @pid=1, @memory_position=16>
+[1, 1, 255]
+[0, 1, -1]
+
+#<TimeEvent:0x000000020c6f50 @t0=1, @mode=:memory_access, @pid=1, @memory_position=32>
+[1, 1, 1]
+[0, 1, 2]
+
+#<TimeEvent:0x000000020c6e38 @t0=1, @mode=:add_process, @process_name="process2", @number_of_bytes=40, @pid=2>
+[1, 1, 1]
+[0, 1, 2]
+
+#<TimeEvent:0x000000020c6ed8 @t0=4, @mode=:memory_access, @pid=1, @memory_position=1>
+[1, 1, 1]
+[0, 1, 2]
+
+#<TimeEvent:0x000000020c6e88 @t0=4, @mode=:memory_access, @pid=1, @memory_position=16>
+[1, 1, 1]
+[0, 1, 2]
+
+#<TimeEvent:0x000000020c6d70 @t0=4, @mode=:memory_access, @pid=2, @memory_position=1>
+[1, 1, 2]
+[0, 1, 13]
+
+#<TimeEvent:0x000000020c7040 @t0=5, @mode=:remove_process, @pid=1>
+[1, 1, 2]
+[0, 1, 13]
+
+#<TimeEvent:0x000000020c6dc0 @t0=6, @mode=:remove_process, @pid=2>
+[1, 1, 2]
+[0, 1, 13]

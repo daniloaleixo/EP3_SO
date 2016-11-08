@@ -15,7 +15,7 @@ memory_management_mode = 1
 page_replacement_mode = 1
 
 loop do
-  print "[ep3]: "
+  print "[ep2]: "
   # pega a linha de comando escrita pelo usuario
   option = gets.strip.split(" ")
 
