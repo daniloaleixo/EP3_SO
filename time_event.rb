@@ -1,5 +1,22 @@
 
 
+# ************************************
+
+  # EP3 - Sistemas Operacionais
+  # Prof. Daniel Batista
+
+  # Danilo Aleixo Gomes de Souza
+  # n USP: 7972370
+
+  # Carlos Augusto Motta de Lima
+  # n USP: 7991228
+
+# *************************************
+
+
+
+
+
 # O objeto TimeEvent pode ter 3 tipos de evento:
 #    Adicionar Processo
 #    Remover Processo

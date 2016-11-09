@@ -1,3 +1,20 @@
+
+# ************************************
+
+  # EP3 - Sistemas Operacionais
+  # Prof. Daniel Batista
+
+  # Danilo Aleixo Gomes de Souza
+  # n USP: 7972370
+
+  # Carlos Augusto Motta de Lima
+  # n USP: 7991228
+
+# *************************************
+
+
+
+
 # Usamos esta classe para fazer a gerencia de memoria, portanto a implementacao dos 
 # algoritmos de gerencia de espaco livre e de substituicao de paginas estao nesta classe, 
 # junto com as estruturas de dados usadas nesta tarefa 
