@@ -334,6 +334,31 @@ class MemoryManager
     end
   end
 
+  #
+  # Implementação do algortimo de substituicao de pagina -> Second Chance
+  #
+  def self.second_chance(memory_page)
+    # varre primeiramente a memoria fisica e verifica se existe algum espaco livre
+    index = @@physical_memory_page_reference.index(-1)
+
+    # se nao tem nenhum espaco livre entao pegamos o elemento mais antigo e verificamos o bit R
+    if index.nil?
+      elemento_mais_antigo = @@fifo_queue.shift
+
+      # se o bit for 1 entao setamos para 0 e colocamos no final da fila
+      while elemento_mais_antigo.r == 1
+        elemento_mais_antigo.r = 0
+        @@fifo_queue << elemento_mais_antigo
+        elemento_mais_antigo = @@fifo_queue.shift
+      end
+      # quando acharmos um com bit 0 devolvemos o indice 
+      return elemento_mais_antigo.physical_index
+    else
+      @@fifo_queue << memory_page
+      return index
+    end
+  end
+
 
   #
   #  A funcao lida com os acessos às posicoes de memoria, entao primeiros varremos a 
@@ -403,6 +428,7 @@ class MemoryManager
     case page_replacement_mode
     when 1 then not_recently_used_page
     when 2 then first_in_first_out(memory_page)
+    when 3 then second_chance(memory_page)
     end
   end
 
