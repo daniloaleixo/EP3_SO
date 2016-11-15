@@ -1,4 +1,3 @@
-
 # ************************************
 
   # EP3 - Sistemas Operacionais
@@ -12,20 +11,17 @@
 
 # *************************************
 
+# Usamos esta classe para gerenciar a memória. Portanto, a implementaçãoo dos 
+# algoritmos de gerência de espaço livre e substituição de páginas estão aqui, 
+# junto com as estruturas de dados usadas nesta tarefa.
 
-
-
-# Usamos esta classe para fazer a gerencia de memoria, portanto a implementacao dos 
-# algoritmos de gerencia de espaco livre e de substituicao de paginas estao nesta classe, 
-# junto com as estruturas de dados usadas nesta tarefa 
-# Esta classe eh estatica, pois sera usada apenas uma vez para cada instancia do EP que tivermos
 class MemoryManager
   # vetor de todas as paginas que estarao na memoria virtual
   @@memory_pages_table = nil
   
   @@next_fit_last_assigned = 0
   
-  # Physical_memory_page_reference guarda para cada quadro de pagina o indice
+  # physical_memory_page_reference guarda para cada quadro de pagina o indice
   # da pagina na memoria virtual
   @@physical_memory_page_reference = nil
 
@@ -79,14 +75,10 @@ class MemoryManager
   end
 
 
-  #
-  # A funcao reescreve os arquivos binarios que representam a memoria virtual e a memoria fisica 
-  #
+  # Reescreve os arquivos binários que representam as memórias virtual e física
   def self.update_memory_files
     # atualiza o arquivo de memória física
-    print_format = @@physical_memory.map { |el| 
-      [el] * 16
-    }.flatten
+    print_format = @@physical_memory.map { |el| [el] * 16 }.flatten
     pack_argument = 'c' * print_format.size
     File.open("/tmp/ep2.mem", "wb") do |file|
       file << print_format.pack(pack_argument)
@@ -359,12 +351,9 @@ class MemoryManager
     end
   end
 
-
-  #
-  #  A funcao lida com os acessos às posicoes de memoria, entao primeiros varremos a 
-  # memoria fisica para saber se a pagina solicitada esta presente nela. Se nao 
-  # estiver precisamos usar um algoritmo de substituicao de pagina
-  #
+  # Lida com os acessos às posições de memória. Varre a memória física para
+  # saber se a página solicitada está presente nela. Se não
+  # estiver, é preciso usar um algoritmo de substituição de página
   def self.memory_access(pid, memory_segments_list, 
                          memory_position, page_replacement_mode)
     page_position = page_index_of_memory_position(pid, memory_position,
@@ -378,7 +367,6 @@ class MemoryManager
       @@memory_pages_table[page_position].recently_used = true
       return true 
     end
-
 
     # Se chegamos nessa linha, é porque a página solicitada não está na memória
     # física. Então, temos que usar um algoritmo de substituição de página.
@@ -432,12 +420,10 @@ class MemoryManager
     end
   end
 
-  #
-  # A funcao retorna o indice da pagina que esta na posicao de memoria passada como parametro
-  #
+  # Retorna o indice da página que está na posição de memória
+  # passada como parâmetro
   def self.page_index_of_memory_position(pid, memory_position,
-                                          memory_segments_list)
-
+                                         memory_segments_list)
     current_segment = memory_segments_list
     initial_page_position = nil
     
@@ -454,20 +440,15 @@ class MemoryManager
     page_position = initial_page_position + (memory_position / 16.0).floor
   end
 
-
-  #
   # A funcao reseta os bits "recently_used" das paginas que estao na memoria fisica
-  # por implementacao esperamos 3 segundos para fazer essa atualizacao 
-  #
+  # por implementacao esperamos 3 segundos para fazer essa atualizacao
   def self.reset_bit_r_from_pages
     @@memory_pages_table.each do |memory_page|
       memory_page.recently_used = false
     end
   end
 
-  #
   # Imprime a lista encadeada de segmentos de memoria
-  #
   def self.print_memory_segments_list(memory_segments_list)
     initial_position = memory_segments_list.initial_page_position
     livre = memory_segments_list.pid == -1 ? "livre" : memory_segments_list.pid
@@ -479,10 +460,7 @@ class MemoryManager
     end
   end
 
-
-  #
-  # A funcao imprime as estruturas de dados usadas no EP
-  #
+  # Imprime as estruturas de dados usadas no EP
   def self.print_everything(memory_segments_list, t)
     if t == -1
       print "Estado final:\n"
@@ -503,10 +481,7 @@ class MemoryManager
     p "------------------------------------------------------------------------"
   end
 
-
-  #
-  # A funcao reinicializa as estruturas de dados usadas no EP
-  #
+  # Reinicializa as estruturas de dados usadas no EP
   def self.clean
     @@memory_pages_table = nil
     @@next_fit_last_assigned = 0

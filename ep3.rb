@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-
 # ************************************
 
   # EP3 - Sistemas Operacionais
@@ -17,16 +16,18 @@
 
 require './lib'
 
-# variavel que contem as linhas do arquivo de trace
+# objeto TraceFileData com informações estruturadas do arquivo de trace
 trace_file = nil
-# a variavel contem um hash onde os PIDs estao conectados com seus respectivos nomes do processo
+# objeto TimeManager com lista de eventos a serem simulados
+time_manager = nil
+# hash que identifica o nome do processo com determinado PID
 pid_dictionary = {}
 # lista encadeada de segmentos de memoria virtual
 memory_segments_list = nil
 
-# varias para lidar com os tipos de algoritmos, tanto de substituicao de pagina,
-# quanto de gerenciamento de espaco livre
+# identificador do algoritmo de gerenciamento de espaco livre
 memory_management_mode = 1
+# identificador do algoritmo de substituicao de pagina
 page_replacement_mode = 1
 
 loop do
@@ -37,18 +38,18 @@ loop do
   case option.shift
   when "sai" then break
   when "carrega"
-    # carrega as linhas do arquivo de trace e as armazena num vetor
-    file_lines = FileManager.read_trace_file(option.first)
+    # Inicializa as estruturas de dados
 
-    # extrai os dados do vetor de linhas do arquivo de trace e armazena num
-    # objeto TraceFileData
-    trace_file = TraceFileData.new(file_lines, pid_dictionary)
+    # extrai os dados do arquivo de trace e armazena num objeto TraceFileData
+    trace_file = TraceFileData.new(option.first, pid_dictionary)
 
-    TimeManager.build_time_events_list(trace_file.lines)
+    time_manager = TimeManager.new(trace_file.lines)
 
-    # Inicializa as estruturas de dados 
+    # qtde de páginas de memória virtual e quadros de página na memória física
     total_virtual_pages = trace_file.virtual / 16
     total_physical_frame_pages = trace_file.total / 16
+
+    # lista de segmentos de memória
     memory_segments_list = MemoryManager.start(total_virtual_pages,
                                                total_physical_frame_pages)
     MemoryManager.update_memory_files
@@ -63,7 +64,7 @@ loop do
     # coloca os processos 'em execução'
     print_interval = (option.first or 1).to_i
 
-    for i in 0..TimeManager.time_events_list.keys.sort.last do
+    for i in 0..(time_manager.time_events_list.keys.max) do
       initiate_time_counter = Time.now
 
       MemoryManager.print_everything(memory_segments_list, i) if i % print_interval == 0
@@ -74,10 +75,10 @@ loop do
       # manter a informação do bit R nem por muito tempo e nem por pouco demais.
       MemoryManager.reset_bit_r_from_pages if i % 3 == 0
 
-      # lemos cada objeto TimeEvent que tem como chave o segundo em que esta o sistema, portanto 
-      # supondo que estamos no segundo Tn, temos que executar todos os eventos na hash que tenham 
-      # a chave Tn
-      TimeManager.time_events_list[i].each do |time_event|
+      # lemos cada objeto TimeEvent que tem como chave o segundo em que está o
+      # sistema, portanto supondo que estamos no segundo Tn, temos que executar
+      # todos os eventos na lista de eventos que é valor da chave Tn na hash
+      time_manager.time_events_list[i].each do |time_event|
         case time_event.mode
         when :add_process
           # A funcao usa o algoritmo de gerencia de memoria livre de acordo com o que o usuario escolheu
@@ -127,6 +128,6 @@ loop do
     " em <intervalo> segundos\n"
     print "sai \t\tfinaliza o simulador"
     print "\n"
-end
+  end
 end
 

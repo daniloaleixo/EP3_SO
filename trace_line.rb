@@ -11,25 +11,17 @@
 
 # *************************************
 
-
-
-
-
-
-
 #
-# Classe usada para identificar a estrutura de cada linha do arquivo de trace
+# Estrutura de cada linha do arquivo de trace
 #
 
 class TraceLine
   attr_accessor :t0, :process_name, :tf, :number_of_bytes, 
                 :memory_accesses, :pid
   
-  #
-  # A funcao recebe como entrada a linha do arquivo de trace onde um processo eh descrito 
-  # e coloca o t0, process_name, tf e number_of_bytes como atributos do objeto, alem disso
-  # cria um vetor como todos os acessos a memoria feitos por esse processo
-  #
+  # Recebe como entrada uma string contendo uma linha do arquivo de trace
+  # e coloca t0, process_name, tf e number_of_bytes como atributos do objeto,
+  # e cria também um vetor com os acessos de memória
   def initialize(file_line, pid_dictionary)
     line_elements = file_line.split(" ")
     
@@ -45,10 +37,7 @@ class TraceLine
     end
   end
 
-  #
-  # Usamos essa funcao para escolher um novo pid para o proximo processo que chegar
-  # no sistema, pegamos o ultimo pid no dicionario e incrementamos seu valor 
-  #
+  # Escolhe um pid para o processo
   def assign_pid(pid_dictionary)
     pid = pid_dictionary.keys.max.to_i + 1
     pid_dictionary[pid] = @process_name

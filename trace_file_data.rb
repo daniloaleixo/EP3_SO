@@ -1,5 +1,3 @@
-
-
 # ************************************
 
   # EP3 - Sistemas Operacionais
@@ -13,31 +11,31 @@
 
 # *************************************
 
-
-
-
-
-
-
-
-
-
 class TraceFileData
   attr_accessor :total, :virtual, :lines
 
   #
-  # A funcao recebe como entrada o vetor de linhas, onde cada elemento do vetor eh uma linha do arquivo
-  # de trace e separa as informacoes necessarias, como memoria virtual e total, em seguida
-  # cria um objeto TraceLine para cada linha de processo
+  # A funcao recebe como entrada um vetor de linhas do arquivo de trace
+  # e separa as informacoes necessarias, como memoria virtual e total,
+  # criando um objeto TraceLine para cada linha de processo
   #
-  def initialize(file_lines, pid_dictionary)
-    total_and_virtual = file_lines.shift.split(" ")
-    @total = total_and_virtual.first.to_i
-    @virtual = total_and_virtual.last.to_i
-
-    @lines = []
-    file_lines.each do |line|
-      @lines << TraceLine.new(line, pid_dictionary)
-    end
+  def initialize(path, pid_dictionary)
+    file_lines = trace_file_lines(path)
+    @total, @virtual = file_lines.shift.split(" ").map(&:to_i)
+    @lines = file_lines.map { |line| TraceLine.new(line, pid_dictionary) }
   end
+
+  private
+    #
+    # Abre o arquivo que foi passado pelo usuario e coloca todas as suas linhas
+    # em um vetor que eh retornado pela funcao 
+    #
+    def trace_file_lines(path)
+      begin
+        File.open(path, 'r') { |file| file.read.lines }
+      rescue Errno::ENOENT
+        p "Não foi possível o arquivo (nome inválido)"
+        exit
+      end
+    end
 end
