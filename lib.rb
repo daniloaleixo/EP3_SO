@@ -1,4 +1,3 @@
-
 # ************************************
 
   # EP3 - Sistemas Operacionais
@@ -11,7 +10,6 @@
   # n USP: 7991228
 
 # *************************************
-
 
 
 # importa todos os arquivos necessários para o funcionamento do programa
