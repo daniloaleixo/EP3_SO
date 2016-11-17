@@ -50,7 +50,7 @@ loop do
     # TODO 16 tem que ser substituido por p e s
     MemoryManager.start(total_virtual_pages, total_physical_frame_pages, 16, 16)
     
-  when "espaco"
+  when "s"
     memory_management_mode = option.first.to_i
 
   when "substitui"

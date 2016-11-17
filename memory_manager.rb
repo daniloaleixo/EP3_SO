@@ -30,10 +30,6 @@ class MemoryManager
 
   # Fila de páginas que será usada no FIFO
   @@fifo_queue = []
-
-  def self.memory_pages_table
-    @@memory_pages_table
-  end
   
   # 
   # Inicia as estruturas de dados usadas
@@ -45,7 +41,7 @@ class MemoryManager
     # Cada célula deste array possui as seguintes informações: PID do processo 
     # representado nesta página; se esta página está referenciada dentro da memória 
     # física, e seu índice; e se foi usada recentemente.
-    # Aqui criamos esse array 
+    # Aqui criamos esse array
     @@memory_pages_table = Array.new(total_virtual_pages).map { MemoryPage.new }
 
     # Physical_memory_page_reference:  Para a memória física temos dois arrays, o
@@ -185,37 +181,32 @@ class MemoryManager
   # escolhemos a primeira posicao livre, porem partindo sempre da ultima 
   # posicao que um elemento foi adicionado
   #
-  def self.next_fit(size)
-    current_segment = memory_segments_list
+  def self.next_fit(process_size)
+    size = 0
+    index = -1
+    
+    i = @@next_fit_last_assigned
+    n = @@bitmap.size
 
-    # encontra o segmento do qual começaremos a varrer a lista
-    while not current_segment.nil?
-      break if current_segment.initial_page_position >= @@next_fit_last_assigned
-      current_segment = current_segment.prox
-    end
-    current_segment = memory_segments_list if current_segment.nil? 
-    limit_segment = current_segment
-    
-    # varre a lista de limit_segment até o final
-    while not current_segment.nil?
-      if current_segment.pid == -1 and current_segment.size >= size
-        @@next_fit_last_assigned = current_segment.initial_page_position + size
-        return current_segment.initial_page_position
+    n.times do
+      bit = @@bitmap[i]
+
+      if size == process_size
+        @@next_fit_last_assigned = index
+        return index
       end
-      current_segment = current_segment.prox
-    end
-    
-    # como não encontrou espaço livre do limite até o final, varre do início
-    # até o limite buscando espaço livre.
-    current_segment = memory_segments_list
-    while current_segment != limit_segment
-      if current_segment.pid == -1 and current_segment.size >= size
-        @@next_fit_last_assigned = current_segment.initial_page_position + size
-        return current_segment.initial_page_position
+
+      if bit == 1 or i == n - 1
+        index = -1
+        size = 0
+      else
+        index = i if size == 0
+        size += 1
       end
-      current_segment = current_segment.prox
+
+      i = (i + 1) % n
     end
-    return nil
+    nil
   end
 
 
