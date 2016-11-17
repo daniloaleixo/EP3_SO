@@ -1,15 +1,11 @@
 TODO
 
-- Mudar para bitmap ao inves de lista ligada, PQP e ainda tem que ser um vetor de bits com inteiros de 32 bits VTNC
-	- O bitmap só tem 0 e 1s, entao agora precisamos guardar onde comeca e onde termina o processo para conseguirmos retirar ele corretamente
 - Mudar o programa para receber as duas entradas a mais s e p, onde (p é multiplo de s):
 	- s: é o tamanho da unidade de alocação a ser considerada para a exeução dos algoritmos de gerencia de espaço livre
 	- p: é o tamanho da pagina a ser considerada para a execucao dos algoritmos de substituição de pagina
 - Acho que devemos tirar o atributo @recently_used do MEmory_page
-- Implementar algoritmos best fit (espaco livre com tamanho mais proximo que preciso) e worst fit(maior espaco livre). OS outros dois estao funcionando =)
 - Implementar algoritmos de substituição:
 	- Optimal: dar um jeito de verificar quando a pagina sera acessada novamente no futuro e deixar a pagina muito acessada e tirar a menos
-	- Second Chance: olha a pagina mais antiga e ve o bit R, se for 0 a pagina e antiga e pode ser tirada, se for 1 entao coloca 0 e colocamos de novo na fila
 	- Clock: lista circular que tem um apontador para a pagina mais antiga, se o bit R for 0 coloca a nova pagina no lugar e vai pra proxima posicao, 
 		se o bit for 1 troca o bit para 0 e vai pra proxima pagina ate achar um bit com 0
 	- Least Recently Used: 
