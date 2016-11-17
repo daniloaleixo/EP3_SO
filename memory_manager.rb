@@ -236,9 +236,38 @@ class MemoryManager
       end
     end
 
-    p best_found
-
     best_found
+  end
+
+  def self.worst_fit(process_size)
+    size = 0
+    worst_found = index = -1
+    worst_found_size = 0
+    i = 0
+    @@bitmap.each do |bit|
+      if bit == 0
+        index = i if size == 0
+        size += 1
+      else
+        if size >= process_size and size > worst_found_size
+          worst_found_size = size
+          worst_found = index
+        end
+        index = -1
+        size = 0
+      end
+      i += 1
+    end
+    
+    if @@bitmap[i - 1] == 0
+      if size >= process_size and size > worst_found_size
+        worst_found_size = size
+        worst_found = index
+      end
+    end
+
+    p worst_found 
+    worst_found
   end
 
   #
@@ -351,6 +380,7 @@ class MemoryManager
     when 1 then first_fit(size)
     when 2 then next_fit(size)
     when 3 then best_fit(size)
+    when 4 then worst_fit(size)
     end
   end
 
