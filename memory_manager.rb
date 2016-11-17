@@ -185,7 +185,7 @@ class MemoryManager
   # escolhemos a primeira posicao livre, porem partindo sempre da ultima 
   # posicao que um elemento foi adicionado
   #
-  def self.next_fit(memory_segments_list, size)
+  def self.next_fit(size)
     current_segment = memory_segments_list
 
     # encontra o segmento do qual começaremos a varrer a lista
