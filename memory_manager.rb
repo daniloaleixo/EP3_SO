@@ -102,10 +102,6 @@ class MemoryManager
     initial_page_position = opts[:initial_page_position]
     size_in_pages = opts[:size_in_pages]
     mode = opts[:mode]
-
-
-    p initial_page_position
-    p size_in_pages
     
     for i in initial_page_position..(initial_page_position + size_in_pages - 1) do
       case mode
@@ -136,59 +132,27 @@ class MemoryManager
                               mode: :add)
   end
 
-
   #
   # Termina um processo, liberando o bitmap
   #
-  def self.remove_process(memory_segments_list, pid, pid_dictionary)
+  def self.remove_process(time_event, pid_dictionary)
+    process = time_event.process
+    allocation_units = (process.number_of_bytes / 16.0).ceil
 
-    previous_segment = current_segment = memory_segments_list
-
-    # varre a lista até o último elemento (current_segment == nil) ou até
-    # encontrar o elemento com pid passado via argumento
-    while !current_segment.nil? and current_segment.pid != pid
-      previous_segment = current_segment
-      current_segment = current_segment.prox
-    end
-    return nil if current_segment.nil?
-
-
-    next_segment = current_segment.prox
-    size = current_segment.size
-    initial_page_position = current_segment.initial_page_position
-
-    
-    if previous_segment.pid == -1
-      # entao o segmento anterior ao do processo removido está livre
-      previous_segment.prox = next_segment
-      current_segment.prox = nil
-      # (não foi preciso dar free porque Ruby tem Gargabe Collector,
-      #  por isso basta tirar o elemento da lista)
-      previous_segment.size += current_segment.size
-      current_segment = previous_segment
-    else
-      current_segment.pid = -1
+    i = process.initial_page_position
+    allocation_units.times do
+      @@bitmap[i] = 0
+      i += 1
     end
 
-    if next_segment.nil?
-      pid_dictionary.delete(pid)
-      update_memory_pages_table(mode: :remove, size: size,
-                                initial_page_position: initial_page_position)
-      return memory_segments_list
-    end
+    initial_page_position = process.initial_page_position
+    # TODO por enquanto fica assim; depois tem que mudar
+    size_in_pages = allocation_units
 
-    if next_segment.pid == -1
-      # se o seguimento seguinte ao removido for livre, o removemos da lista e
-      # aumentamos o tamanho do segmento livre
-      current_segment.prox = next_segment.prox
-      current_segment.size += next_segment.size
-      next_segment.prox = nil
-    end
-
-    pid_dictionary.delete(pid)
-    update_memory_pages_table(mode: :remove, size: size,
-                              initial_page_position: initial_page_position)
-    return memory_segments_list
+    pid_dictionary.delete(process.pid)
+    update_memory_pages_table(mode: :remove,
+                              initial_page_position: initial_page_position,
+                              size_in_pages: size_in_pages)
   end
 
   #

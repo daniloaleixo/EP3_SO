@@ -81,7 +81,7 @@ loop do
           
           MemoryManager.add_process(time_event.process, initial_page_position)
         when :remove_process
-          MemoryManager.remove_process(time_event.pid, pid_dictionary)
+          MemoryManager.remove_process(time_event, pid_dictionary)
         when :memory_access
           MemoryManager.memory_access(time_event, page_replacement_mode)
         end
@@ -92,10 +92,10 @@ loop do
 
       time_elapsed = Time.now - initiate_time_counter
       # dorme até chegarmos ao próximo segundo
-      sleep(1 - time_elapsed)
+      sleep(0.3 - time_elapsed)
     end
 
-    MemoryManager.print_everything(memory_segments_list, -1)
+    MemoryManager.print_everything(-1)
     # reinicializa as variaveis para cada execucao
     process_list = nil
     pid_dictionary = {}
