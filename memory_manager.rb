@@ -209,6 +209,37 @@ class MemoryManager
     nil
   end
 
+  def self.best_fit(process_size)
+    size = 0
+    best_found = index = -1
+    best_found_size = @@bitmap.size + 1
+    i = 0
+    @@bitmap.each do |bit|
+      if bit == 0
+        index = i if size == 0
+        size += 1
+      else
+        if size >= process_size and size < best_found_size
+          best_found_size = size
+          best_found = index
+        end
+        index = -1
+        size = 0
+      end
+      i += 1
+    end
+    
+    if @@bitmap[i - 1] == 0
+      if size >= process_size and size < best_found_size
+        best_found_size = size
+        best_found = index
+      end
+    end
+
+    p best_found
+
+    best_found
+  end
 
   #
   # Implementação do algortimo de substituicao de pagina -> NRU
@@ -319,6 +350,7 @@ class MemoryManager
     case memory_management_mode
     when 1 then first_fit(size)
     when 2 then next_fit(size)
+    when 3 then best_fit(size)
     end
   end
 
