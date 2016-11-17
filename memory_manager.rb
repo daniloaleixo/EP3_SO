@@ -38,7 +38,8 @@ class MemoryManager
   # 
   # Inicia as estruturas de dados usadas
   #
-  def self.start(total_virtual_pages, total_physical_frame_pages)
+  def self.start(total_virtual_pages, total_physical_frame_pages,
+                 total_virtual_addresses, s_size, p_size)
     # Memory_pages_table: É um array com todas as paginas que estarão na memoria
     # virtual, então para cada segmento que existe um processo em memory_segment_list
     # suas respectivas páginas estarão representadas nessa estrutura.
@@ -60,18 +61,15 @@ class MemoryManager
     # aqui criamos esse array 
     @@physical_memory = Array.new(total_physical_frame_pages, 255)
 
- 
-    # Memory_segment_list: É uma lista encadeada de segmentos da memoria virtual, 
-    # onde para cada elemento da lista ligada, temos um segmento que ou esta livre,
-    # ou esta com um processo no segmento. É a estrutura que os algoritmos de 
-    # gerenciamento de espaço livre vão usar para encontrar o próximo segmento livre.
-    # Cada célula possui as seguintes informações: posição da página inicial para este 
-    # segmento; o tamanho do segmento; o PID do processo que esta representado no 
-    # segmento; e a próxima célula.
-    # Aqui criamos a lista encadeada de segmentos da memoria virtual, 
-    # sendo que o primeiro elemento representa memoria livre, ou seja,
-    # pid = -1 e o tamanho eh a memoria inteira: total_virtual_pages
-    VMemorySegment.new(0, total_virtual_pages, -1, nil)
+    # bitmap: vetor de booleanos que contém uma posição para cada endereço da
+    # memória virtual, contendo false nos índices dos endereços que estão
+    # ocupados e true nos índices dos endereços vazios.
+    @@bitmap = Array.new(total_virtual_addresses, false)
+
+    @@s = s_size
+    @@p = p_size
+
+    update_memory_files
   end
 
 
@@ -119,9 +117,8 @@ class MemoryManager
   #
   # Adiciona um processo na lista encadeada segmentos de memoria
   #
-  def self.add_process_to_list(opts={})
+  def self.add_process(opts={})
     # os argumentos serão recebidos via hash.
-    memory_segments_list = opts[:memory_segments_list]
     pid = opts[:pid]
     name = opts[:name]
     initial_page_position = opts[:initial_page_position]
@@ -130,15 +127,6 @@ class MemoryManager
     pid_dictionary = opts[:pid_dictionary]
 
 
-    current_segment = previous_segment = memory_segments_list
-    
-    # vamos nos certificar que a posicao de inicio da pagina que vamos criar eh 
-    # nao nula e que ela comece no inicio de um elemento na lista encadeada  
-    while !current_segment.nil? and
-          current_segment.initial_page_position != initial_page_position
-      previous_segment = current_segment
-      current_segment = current_segment.prox
-    end
 
     # criamos o novo segmento passando as infos que recebemos 
     new_memory_segment = VMemorySegment.new(initial_page_position, size, pid, 
@@ -236,19 +224,22 @@ class MemoryManager
 
   #
   # Implementacao do algoritmo de gerencia de espaco livre -> First Fit
+  # Se percorre o bitmap e se devolver o índice da primeira posição que
+  # comporta process_size
   #
-  # onde percorremos a lista encadeada de segmentos de memoria, 
-  # partindo do começo da mesma e escolhemos a primeira posicao livre
-  #
-  def self.first_fit(memory_segments_list, size)
-    current_segment = memory_segments_list
-    while not current_segment.nil?
-      if current_segment.pid == -1 and current_segment.size >= size
-        return current_segment.initial_page_position 
+  def self.first_fit(process_size)
+    size = 0
+    index = -1
+    @@bitmap.each_with_index do |bit, i|
+      if bit
+        index = i if size == 0
+        size += 1
+      else
+        index = -1
+        size = 0
       end
-      current_segment = current_segment.prox
     end
-    nil if current_segment.nil?
+    index >= 0 ? index : nil
   end
 
   #
@@ -397,14 +388,14 @@ class MemoryManager
   end
 
   #
-  # A funcao usa o algoritmo de gerencia de memoria livre de acordo com o que o usuario escolheu
+  # A funcao usa o algoritmo de gerencia de memoria livre de acordo com o que
+  # o usuario escolheu
   # 
-  def self.memory_management_algorithm(memory_segments_list,
-                                       memory_management_mode, number_of_bytes)
-    size = (number_of_bytes / 16.0).ceil
+  def self.memory_management_algorithm(memory_management_mode, number_of_bytes)
+    size = (number_of_bytes / @@s).ceil
     case memory_management_mode
-    when 1 then first_fit(memory_segments_list, size)
-    when 2 then next_fit(memory_segments_list, size)
+    when 1 then first_fit(size)
+    when 2 then next_fit(size)
     end
   end
 
@@ -448,27 +439,15 @@ class MemoryManager
     end
   end
 
-  # Imprime a lista encadeada de segmentos de memoria
-  def self.print_memory_segments_list(memory_segments_list)
-    initial_position = memory_segments_list.initial_page_position
-    livre = memory_segments_list.pid == -1 ? "livre" : memory_segments_list.pid
-    print "[#{initial_position}, #{initial_position + memory_segments_list.size - 1}, #{livre}] -> "
-    if memory_segments_list.prox.nil?
-      print " nil\n\n"
-    else
-      print_memory_segments_list(memory_segments_list.prox)
-    end
-  end
-
   # Imprime as estruturas de dados usadas no EP
-  def self.print_everything(memory_segments_list, t)
+  def self.print_everything(t)
     if t == -1
       print "Estado final:\n"
     else
       print "t = #{t}s\n"
     end
-    print "Lista de segmentos de memória:\n"
-    print_memory_segments_list(memory_segments_list)
+
+    print "Bitmap: #{@@bitmap.map { |bit| bit ? 1 : 0 }.join(" ")}\n"
     
     print "Estado da memória virtual:\n"
     p @@memory_pages_table.map(&:pid)

@@ -22,8 +22,6 @@ trace_file = nil
 time_manager = nil
 # hash que identifica o nome do processo com determinado PID
 pid_dictionary = {}
-# lista encadeada de segmentos de memoria virtual
-memory_segments_list = nil
 
 # identificador do algoritmo de gerenciamento de espaco livre
 memory_management_mode = 1
@@ -49,10 +47,7 @@ loop do
     total_virtual_pages = trace_file.virtual / 16
     total_physical_frame_pages = trace_file.total / 16
 
-    # lista de segmentos de memória
-    memory_segments_list = MemoryManager.start(total_virtual_pages,
-                                               total_physical_frame_pages)
-    MemoryManager.update_memory_files
+    MemoryManager.start(total_virtual_pages, total_physical_frame_pages)
     
   when "espaco"
     memory_management_mode = option.first.to_i
@@ -67,7 +62,7 @@ loop do
     for i in 0..(time_manager.time_events_list.keys.max) do
       initiate_time_counter = Time.now
 
-      MemoryManager.print_everything(memory_segments_list, i) if i % print_interval == 0
+      MemoryManager.print_everything(i) if i % print_interval == 0
       
       # o fluxo abaixo reseta os bits R (recently_used) de todas as páginas
       # a cada 3 segundos
@@ -91,7 +86,7 @@ loop do
                      size: (time_event.number_of_bytes / 16.0).ceil,
                      initial_page_position: initial_page_position,
                      pid_dictionary: pid_dictionary }
-          memory_segments_list = MemoryManager.add_process_to_list(params)
+          memory_segments_list = MemoryManager.add_process(params)
         when :remove_process
           MemoryManager.remove_segment_from_list(memory_segments_list,
                                                  time_event.pid,

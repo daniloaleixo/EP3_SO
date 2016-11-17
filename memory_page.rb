@@ -1,4 +1,3 @@
-
 # ************************************
 
   # EP3 - Sistemas Operacionais
@@ -13,11 +12,9 @@
 # *************************************
 
 
-
-
 #
-# Classe usada para identificar a estrutura usada em cada posicao do vetor que expressa 
-# todas as paginas que estao na memoria fisica 
+# Estrutura usada em cada posicao do vetor que contém
+# todas as paginas que estao na memoria fisica
 #
 class MemoryPage
   attr_accessor :pid, :on_physical, :recently_used, :physical_index, :r
