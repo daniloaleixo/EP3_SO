@@ -22,15 +22,12 @@
 # atualizar as páginas dizendo se foram ou não acessadas.
 
 class TimeEvent
-  attr_accessor :t0, :mode, :process_name, :number_of_bytes,
-                :pid, :memory_position
+  attr_accessor :mode, :process, :memory_position, :access_time
 
   def initialize(opts={})
-    @t0 = opts[:t0]
+    @process = opts[:process]
     @mode = opts[:mode]
-    @process_name = opts[:process_name]
-    @number_of_bytes = opts[:number_of_bytes]
-    @pid = opts[:pid]
     @memory_position = opts[:memory_position]
+    @access_time = opts[:access_time]
   end
 end

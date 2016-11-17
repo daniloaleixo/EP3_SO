@@ -13,9 +13,9 @@
 
 
 # importa todos os arquivos necessários para o funcionamento do programa
-require './vmemory_segment'
-require './trace_file_data'
-require './trace_line'
+require './bitarray'
+require './process_list'
+require './process'
 require './memory_manager'
 require './memory_page'
 require './time_event'

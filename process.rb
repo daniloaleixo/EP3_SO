@@ -15,9 +15,9 @@
 # Estrutura de cada linha do arquivo de trace
 #
 
-class TraceLine
-  attr_accessor :t0, :process_name, :tf, :number_of_bytes, 
-                :memory_accesses, :pid
+class AProcess
+  attr_accessor :t0, :process_name, :tf, :number_of_bytes,
+                :memory_accesses, :pid, :initial_page_position
   
   # Recebe como entrada uma string contendo uma linha do arquivo de trace
   # e coloca t0, process_name, tf e number_of_bytes como atributos do objeto,
@@ -42,5 +42,9 @@ class TraceLine
     pid = pid_dictionary.keys.max.to_i + 1
     pid_dictionary[pid] = @process_name
     return pid
+  end
+
+  def size_in_pages
+    (number_of_bytes / 16.0).ceil
   end
 end

@@ -38,8 +38,7 @@ class MemoryManager
   # 
   # Inicia as estruturas de dados usadas
   #
-  def self.start(total_virtual_pages, total_physical_frame_pages,
-                 total_virtual_addresses, s_size, p_size)
+  def self.start(total_virtual_pages, total_physical_frame_pages, s_size, p_size)
     # Memory_pages_table: É um array com todas as paginas que estarão na memoria
     # virtual, então para cada segmento que existe um processo em memory_segment_list
     # suas respectivas páginas estarão representadas nessa estrutura.
@@ -61,13 +60,13 @@ class MemoryManager
     # aqui criamos esse array 
     @@physical_memory = Array.new(total_physical_frame_pages, 255)
 
+    @@s = s_size
+    @@p = p_size
+
     # bitmap: vetor de booleanos que contém uma posição para cada endereço da
     # memória virtual, contendo false nos índices dos endereços que estão
     # ocupados e true nos índices dos endereços vazios.
-    @@bitmap = Array.new(total_virtual_addresses, false)
-
-    @@s = s_size
-    @@p = p_size
+    @@bitmap = BitArray.new(total_virtual_pages * @@p / @@s)
 
     update_memory_files
   end
@@ -101,10 +100,14 @@ class MemoryManager
   def self.update_memory_pages_table(opts={})
     pid = opts[:pid]
     initial_page_position = opts[:initial_page_position]
-    size = opts[:size]
+    size_in_pages = opts[:size_in_pages]
     mode = opts[:mode]
 
-    for i in initial_page_position..(initial_page_position + size - 1) do
+
+    p initial_page_position
+    p size_in_pages
+    
+    for i in initial_page_position..(initial_page_position + size_in_pages - 1) do
       case mode
       when :add
         @@memory_pages_table[i].pid = pid
@@ -117,61 +120,27 @@ class MemoryManager
   #
   # Adiciona um processo na lista encadeada segmentos de memoria
   #
-  def self.add_process(opts={})
-    # os argumentos serão recebidos via hash.
-    pid = opts[:pid]
-    name = opts[:name]
-    initial_page_position = opts[:initial_page_position]
-    # size é o tamanho em páginas de memória (já está dividido por 16)
-    size = opts[:size]
-    pid_dictionary = opts[:pid_dictionary]
+  def self.add_process(process, initial_page_position)
+    allocation_units = (process.number_of_bytes / 16.0).ceil
 
+    process.initial_page_position = initial_page_position
 
-
-    # criamos o novo segmento passando as infos que recebemos 
-    new_memory_segment = VMemorySegment.new(initial_page_position, size, pid, 
-                                            current_segment)
-
-    # quando current_segment == previous_segment significa que a lista possui um 
-    # elemento soh que indica que a memoria inteira
-    # esta livre, portanto precisamos atualizar a cabeca da lista ao adicionar
-    # o novo elemento 
-    if current_segment == memory_segments_list 
-      memory_segments_list = new_memory_segment
-    else
-      previous_segment.prox = new_memory_segment
+    i = initial_page_position
+    allocation_units.times do
+      @@bitmap[i] = 1
+      i += 1
     end
 
-    #atualizamos o tamanho do espaco de memoria livre
-    if current_segment.nil?
-      return nil
-    else
-      current_segment.initial_page_position = initial_page_position + size
-      current_segment.size -= new_memory_segment.size
-
-      # verifica o caso de quando se insere atrás de um espaço livre, e esse
-      # espaço livre tem que desaparecer.
-      if((not current_segment.prox.nil? and
-          current_segment.initial_page_position >= current_segment.prox.initial_page_position) or
-          current_segment.size == 0)
-        new_memory_segment.prox = current_segment.prox
-        current_segment.prox = nil
-      end
-    end
-
-    update_memory_pages_table(mode: :add, pid: pid, size: size,
-                              initial_page_position: initial_page_position)
-
-    #retorna a cabeca da lista encadeada
-    return memory_segments_list
+    update_memory_pages_table(pid: process.pid, size_in_pages: allocation_units,
+                              initial_page_position: initial_page_position,
+                              mode: :add)
   end
 
 
   #
-  # Removemos um segmento de memoria da lista encadeada de segmentos, tornando
-  # a nova posicao uma posicao livre 
+  # Termina um processo, liberando o bitmap
   #
-  def self.remove_segment_from_list(memory_segments_list, pid, pid_dictionary)
+  def self.remove_process(memory_segments_list, pid, pid_dictionary)
 
     previous_segment = current_segment = memory_segments_list
 
@@ -230,16 +199,19 @@ class MemoryManager
   def self.first_fit(process_size)
     size = 0
     index = -1
-    @@bitmap.each_with_index do |bit, i|
-      if bit
+    i = 0
+    @@bitmap.each do |bit|
+      return index if size == process_size
+      if bit == 0
         index = i if size == 0
         size += 1
       else
         index = -1
         size = 0
       end
+      i += 1
     end
-    index >= 0 ? index : nil
+    nil
   end
 
   #
@@ -345,25 +317,22 @@ class MemoryManager
   # Lida com os acessos às posições de memória. Varre a memória física para
   # saber se a página solicitada está presente nela. Se não
   # estiver, é preciso usar um algoritmo de substituição de página
-  def self.memory_access(pid, memory_segments_list, 
-                         memory_position, page_replacement_mode)
-    page_position = page_index_of_memory_position(pid, memory_position,
-                                                  memory_segments_list)
+  def self.memory_access(time_event, page_replacement_mode)
+    page_position = page_index_of_memory_position(time_event)
+    page = @@memory_pages_table[page_position]
+    
     return nil if page_position.nil?
 
-    # varre a memória física para saber se 'page_position' está nela
-    # se 'page_position' está em alguma posição de '@@physical_memory_page_reference',
-    # retornamos 'true' (ou seja, a memória foi acessada com sucesso)
-    if not @@physical_memory_page_reference.index(page_position).nil?
-      @@memory_pages_table[page_position].recently_used = true
+    # verifica se a página já está na memória física. Se sim, retorna true
+    # (memória acessada com sucesso)
+    if page.on_physical
+      page.recently_used = true
       return true 
     end
 
     # Se chegamos nessa linha, é porque a página solicitada não está na memória
     # física. Então, temos que usar um algoritmo de substituição de página.
-    physical_index = page_replacement_algorithm(page_replacement_mode,
-                                                @@memory_pages_table[page_position])
-
+    physical_index = page_replacement_algorithm(page_replacement_mode, page)
 
     # se existe uma pagina que iremos remover da memoria fisica fazemos:
     if @@physical_memory_page_reference[physical_index] != -1
@@ -373,18 +342,17 @@ class MemoryManager
     end
 
     # agora inserimos a pagina na memoria fisica 
-    inserted_page = @@memory_pages_table[page_position]
-    inserted_page.on_physical = true
-    inserted_page.physical_index = physical_index
-    inserted_page.recently_used = true
+    page.on_physical = true
+    page.physical_index = physical_index
+    page.recently_used = true
 
     # Quando inserimos uma página da memória virtual na memória física,
     # atualizamos também o vetor @@physical_memory, que contém o estado atual
     # da memória física.
-    @@physical_memory[physical_index] = inserted_page.pid
+    @@physical_memory[physical_index] = page.pid
 
+    # TODO LEMBRAR QUE S É DIFERENTE DE P
     @@physical_memory_page_reference[physical_index] = page_position
-
   end
 
   #
@@ -411,24 +379,11 @@ class MemoryManager
     end
   end
 
-  # Retorna o indice da página que está na posição de memória
-  # passada como parâmetro
-  def self.page_index_of_memory_position(pid, memory_position,
-                                         memory_segments_list)
-    current_segment = memory_segments_list
-    initial_page_position = nil
-    
-    # procura o segmento de memória que tenha o pid passado por parâmetro
-    while current_segment != nil
-      if current_segment.pid == pid
-        initial_page_position = current_segment.initial_page_position
-        break
-      end
-      current_segment = current_segment.prox
-    end
-    return nil if current_segment.nil?
-    # descobre o índice da página que contem 'memory_position'
-    page_position = initial_page_position + (memory_position / 16.0).floor
+  # Transforma posição local da memória de um processo em índice página em que
+  # ela está
+  def self.page_index_of_memory_position(time_event)
+    time_event.process.initial_page_position +
+    (time_event.memory_position / 16.0).floor
   end
 
   # A funcao reseta os bits "recently_used" das paginas que estao na memoria fisica
@@ -447,7 +402,7 @@ class MemoryManager
       print "t = #{t}s\n"
     end
 
-    print "Bitmap: #{@@bitmap.map { |bit| bit ? 1 : 0 }.join(" ")}\n"
+    print "Bitmap: #{@@bitmap}\n"
     
     print "Estado da memória virtual:\n"
     p @@memory_pages_table.map(&:pid)

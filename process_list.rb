@@ -11,7 +11,7 @@
 
 # *************************************
 
-class TraceFileData
+class ProcessList
   attr_accessor :total, :virtual, :lines
 
   #
@@ -22,7 +22,7 @@ class TraceFileData
   def initialize(path, pid_dictionary)
     file_lines = trace_file_lines(path)
     @total, @virtual = file_lines.shift.split(" ").map(&:to_i)
-    @lines = file_lines.map { |line| TraceLine.new(line, pid_dictionary) }
+    @lines = file_lines.map { |line| AProcess.new(line, pid_dictionary) }
   end
 
   private

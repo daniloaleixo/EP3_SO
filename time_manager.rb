@@ -31,25 +31,21 @@ class TimeManager
   attr_accessor :time_events_list
 
   # Constrói a hash de eventos a serem executados
-  def initialize(trace_lines)
+  def initialize(process_list)
     @time_events_list = Hash.new { |h, k| h[k] = [] }
     
-    trace_lines.each do |trace_line|
-      add_process = TimeEvent.new(mode: :add_process, t0: trace_line.t0,
-                                  process_name: trace_line.process_name,
-                                  number_of_bytes: trace_line.number_of_bytes,
-                                  pid: trace_line.pid)
-      @time_events_list[trace_line.t0] << add_process
+    process_list.each do |process|
+      add_process = TimeEvent.new(mode: :add_process, process: process)
+      @time_events_list[process.t0] << add_process
 
-      remove_process = TimeEvent.new(mode: :remove_process,
-                                     t0: trace_line.tf,
-                                     pid: trace_line.pid)
-      @time_events_list[trace_line.tf] << remove_process
+      remove_process = TimeEvent.new(mode: :remove_process, process: process)
+      @time_events_list[process.tf] << remove_process
 
-      trace_line.memory_accesses.each do |memory_access|
-        access = TimeEvent.new(mode: :memory_access, t0: memory_access.last,
+      process.memory_accesses.each do |memory_access|
+        access = TimeEvent.new(mode: :memory_access,
+                               access_time: memory_access.last,
                                memory_position: memory_access.first,
-                               pid: trace_line.pid)
+                               process: process)
         @time_events_list[memory_access.last] << access
       end
     end

@@ -16,8 +16,8 @@
 
 require './lib'
 
-# objeto TraceFileData com informações estruturadas do arquivo de trace
-trace_file = nil
+# objeto ProcessList com informações estruturadas do arquivo de trace
+process_list = nil
 # objeto TimeManager com lista de eventos a serem simulados
 time_manager = nil
 # hash que identifica o nome do processo com determinado PID
@@ -35,19 +35,20 @@ loop do
 
   case option.shift
   when "sai" then break
-  when "carrega"
+  when "c"
     # Inicializa as estruturas de dados
 
-    # extrai os dados do arquivo de trace e armazena num objeto TraceFileData
-    trace_file = TraceFileData.new(option.first, pid_dictionary)
+    # extrai os dados do arquivo de trace e armazena num objeto ProcessList
+    process_list = ProcessList.new(option.first, pid_dictionary)
 
-    time_manager = TimeManager.new(trace_file.lines)
+    time_manager = TimeManager.new(process_list.lines)
 
     # qtde de páginas de memória virtual e quadros de página na memória física
-    total_virtual_pages = trace_file.virtual / 16
-    total_physical_frame_pages = trace_file.total / 16
+    total_virtual_pages = process_list.virtual / 16
+    total_physical_frame_pages = process_list.total / 16
 
-    MemoryManager.start(total_virtual_pages, total_physical_frame_pages)
+    # TODO 16 tem que ser substituido por p e s
+    MemoryManager.start(total_virtual_pages, total_physical_frame_pages, 16, 16)
     
   when "espaco"
     memory_management_mode = option.first.to_i
@@ -55,14 +56,12 @@ loop do
   when "substitui"
     page_replacement_mode = option.first.to_i
     
-  when "executa"
+  when "a"
     # coloca os processos 'em execução'
     print_interval = (option.first or 1).to_i
 
     for i in 0..(time_manager.time_events_list.keys.max) do
       initiate_time_counter = Time.now
-
-      MemoryManager.print_everything(i) if i % print_interval == 0
       
       # o fluxo abaixo reseta os bits R (recently_used) de todas as páginas
       # a cada 3 segundos
@@ -77,29 +76,20 @@ loop do
         case time_event.mode
         when :add_process
           # A funcao usa o algoritmo de gerencia de memoria livre de acordo com o que o usuario escolheu
-          initial_page_position = MemoryManager.memory_management_algorithm(memory_segments_list,
-                                                                            memory_management_mode,
-                                                                            time_event.number_of_bytes)
-          params = { memory_segments_list: memory_segments_list,
-                     pid: time_event.pid,
-                     name: time_event.process_name,
-                     size: (time_event.number_of_bytes / 16.0).ceil,
-                     initial_page_position: initial_page_position,
-                     pid_dictionary: pid_dictionary }
-          memory_segments_list = MemoryManager.add_process(params)
+          initial_page_position = MemoryManager.memory_management_algorithm(memory_management_mode,
+                                                                            time_event.process.number_of_bytes)
+          
+          MemoryManager.add_process(time_event.process, initial_page_position)
         when :remove_process
-          MemoryManager.remove_segment_from_list(memory_segments_list,
-                                                 time_event.pid,
-                                                 pid_dictionary)
+          MemoryManager.remove_process(time_event.pid, pid_dictionary)
         when :memory_access
-          MemoryManager.memory_access(time_event.pid,
-                                      memory_segments_list,
-                                      time_event.memory_position,
-                                      page_replacement_mode)
+          MemoryManager.memory_access(time_event, page_replacement_mode)
         end
         # atualiza os arquivos binarios
         MemoryManager.update_memory_files
       end
+      MemoryManager.print_everything(i) if i % print_interval == 0
+
       time_elapsed = Time.now - initiate_time_counter
       # dorme até chegarmos ao próximo segundo
       sleep(1 - time_elapsed)
@@ -107,7 +97,7 @@ loop do
 
     MemoryManager.print_everything(memory_segments_list, -1)
     # reinicializa as variaveis para cada execucao
-    trace_file = nil
+    process_list = nil
     pid_dictionary = {}
     memory_segments_list = nil
 
