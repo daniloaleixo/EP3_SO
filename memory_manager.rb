@@ -46,19 +46,18 @@ class MemoryManager
     # memory_pages_table: É um array com todas as páginas que estarão na memória
     # virtual. Cada célula é um objeto de MemoryPage.
     # (vide memory_page.rb para descrição da classe)
-    total_virtual_pages = process_list.virtual / @@p
+    total_virtual_pages = (1.0 * process_list.virtual / @@p).ceil
     @@memory_pages_table = Array.new(total_virtual_pages).map { MemoryPage.new }
 
     # physical_memory_page_reference: tem para cada quadro de página na memória
     # física o índice (no array memory_pages_table) da página correspondente.
-    total_physical_frame_pages = process_list.total / @@p
+    total_physical_frame_pages = (1.0 * process_list.total / @@p).ceil
     @@physical_memory_page_reference = Array.new(total_physical_frame_pages, -1)
     
     # Physical_memory: physical_memory temos o PID do processo que está usando
     # aquela posição de memória. Obs: se não tiver nenhum processo
     # então recebe “-1” que é representado por 255, em binário 1111 1111.
-    total_physical_addresses = process_list.total / @@s
-    @@physical_memory = Array.new(total_physical_addresses, 255)
+    @@physical_memory = Array.new(total_physical_frame_pages, 255)
 
     # bitmap: vetor de bits que contém uma posição para cada byte da memória
     # virtual, contendo 0 nos índices dos bytes que estão livres e 1 nos índices
@@ -86,7 +85,7 @@ class MemoryManager
   # Reescreve os arquivos binários que representam as memórias virtual e física
   def self.update_memory_files
     # atualiza o arquivo de memória física
-    print_format = @@physical_memory.map { |el| [el] * 16 }.flatten
+    print_format = @@physical_memory.map { |el| [el] * @@p }.flatten
     pack_argument = 'c' * print_format.size
     File.open("/tmp/ep2.mem", "wb") do |file|
       file << print_format.pack(pack_argument)
@@ -94,7 +93,7 @@ class MemoryManager
 
     # atualiza o arquivo de memória virtual
     print_format = @@memory_pages_table.map { |el|
-      [el.pid == -1 ? 255 : el.pid] * 16
+      [el.pid == -1 ? 255 : el.pid] * @@p
     }.flatten
     pack_argument = 'c' * print_format.size
     File.open("/tmp/ep2.vir", "wb") do |file|
@@ -125,7 +124,7 @@ class MemoryManager
     process.initial_page_position = initial_page_position
 
     i = initial_page_position
-    size_in_pages = (process.number_of_bytes / @@p).ceil
+    size_in_pages = (1.0 * process.number_of_bytes / @@p).ceil
     size_in_pages.times do
       @@bitmap[i] = 1
       i += 1
@@ -140,17 +139,15 @@ class MemoryManager
   #
   def self.remove_process(time_event, pid_dictionary)
     process = time_event.process
-    allocation_units = (process.number_of_bytes / 16.0).ceil
+    size_in_pages = (1.0 * process.number_of_bytes / @@p).ceil
 
     i = process.initial_page_position
-    allocation_units.times do
+    size_in_pages.times do
       @@bitmap[i] = 0
       i += 1
     end
 
     initial_page_position = process.initial_page_position
-    # TODO por enquanto fica assim; depois tem que mudar
-    size_in_pages = allocation_units
 
     pid_dictionary.delete(process.pid)
     update_memory_pages_table(initial_page_position: initial_page_position,
@@ -380,7 +377,7 @@ class MemoryManager
   # Usa o algoritmo de gerência de memória livre selecionado
   # 
   def self.memory_management_algorithm(number_of_bytes)
-    process_size = (number_of_bytes / @@p).ceil
+    process_size = (1.0 * number_of_bytes / @@p).ceil
     case @@memory_management_mode
     when 1 then first_fit(process_size)
     when 2 then next_fit(process_size)
@@ -405,7 +402,7 @@ class MemoryManager
   # ela está
   def self.page_index_of_memory_position(time_event)
     time_event.process.initial_page_position +
-    (time_event.memory_position / 16.0).floor
+    (1.0 * time_event.memory_position / @@p).floor
   end
 
   # A funcao reseta os bits "recently_used" das paginas que estao na memoria fisica

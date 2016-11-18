@@ -92,7 +92,7 @@ loop do
 
       time_elapsed = Time.now - initiate_time_counter
       # dorme até chegarmos ao próximo segundo
-      sleep(0.3 - time_elapsed)
+      sleep(1 - time_elapsed)
     end
 
     MemoryManager.print_everything(-1)
