@@ -31,30 +31,29 @@ page_replacement_mode = 1
 loop do
   print "[ep3]: "
   # pega a linha de comando escrita pelo usuario
-  option = gets.strip.split(" ")
+  got = gets
+  if got.nil?
+    print "\n"
+    break
+  end
+  option = got.strip.split(" ")
 
   case option.shift
   when "sai" then break
   when "c"
-    # Inicializa as estruturas de dados
-
     # extrai os dados do arquivo de trace e armazena num objeto ProcessList
     process_list = ProcessList.new(option.first, pid_dictionary)
 
     time_manager = TimeManager.new(process_list.lines)
 
-    # qtde de páginas de memória virtual e quadros de página na memória física
-    total_virtual_pages = process_list.virtual / 16
-    total_physical_frame_pages = process_list.total / 16
-
-    # TODO 16 tem que ser substituido por p e s
-    MemoryManager.start(total_virtual_pages, total_physical_frame_pages, 16, 16)
+    # Inicializa as estruturas de dados
+    MemoryManager.start process_list
     
   when "s"
-    memory_management_mode = option.first.to_i
+    MemoryManager.memory_management_mode = option.first.to_i
 
   when "substitui"
-    page_replacement_mode = option.first.to_i
+    MemoryManager.page_replacement_mode = option.first.to_i
     
   when "a"
     # coloca os processos 'em execução'
@@ -75,15 +74,16 @@ loop do
       time_manager.time_events_list[i].each do |time_event|
         case time_event.mode
         when :add_process
-          # A funcao usa o algoritmo de gerencia de memoria livre de acordo com o que o usuario escolheu
-          initial_page_position = MemoryManager.memory_management_algorithm(memory_management_mode,
-                                                                            time_event.process.number_of_bytes)
-          
-          MemoryManager.add_process(time_event.process, initial_page_position)
+          # add_process usa o algoritmo de gerência de memória livre selecionado
+          # pelo usuário (usa o first fit se nenhum for selecionado)
+          MemoryManager.add_process(time_event)
+
         when :remove_process
           MemoryManager.remove_process(time_event, pid_dictionary)
+
         when :memory_access
-          MemoryManager.memory_access(time_event, page_replacement_mode)
+          MemoryManager.memory_access(time_event)
+
         end
         # atualiza os arquivos binarios
         MemoryManager.update_memory_files
@@ -103,16 +103,27 @@ loop do
 
     MemoryManager.clean     
   else
-    print "Comando inválido\n"
-    print "Comandos: \ncarrega <arquivo>: \tcarrega arquivo para a simulação\n"
-    print "espaco <num>: \t\tinforma ao simulador que ele sera executado com o algoritmo de gerenciamento",
-    " de espaco livre de número:\n\t\t1 - First Fit\n\t\t2 - Next Fit\n\t\t3 - Best Fit\n\t\t4 - Worst Fit\n"
-    print "substitui <num>: \t\tinforma ao simulador que ele sera executado com o algoritmo de substituição",
-    " de páginas de número:\n\t\t1 - Optimal\n\t\t2 - Second-Chance\n\t\t3 - Clock\n\t\t4 - Least Recently Used\n"
-    print "executa <intervalo>: \t\texecuta o simulador e imprime o estado de memorias na tela de <intervalo>",
-    " em <intervalo> segundos\n"
-    print "sai \t\tfinaliza o simulador"
-    print "\n"
+    print "Comando inválido\n" \
+          "Comandos: \ncarrega <arquivo>: \tcarrega arquivo para a simulação\n" \
+          "espaco <num>: \t\tinforma ao simulador que ele sera executado com "\
+          "o algoritmo de gerenciamento de espaco livre de número:\n" \
+          "\t\t1 - First Fit\n" \
+          "\t\t2 - Next Fit\n" \
+          "\t\t3 - Best Fit\n" \
+          "\t\t4 - Worst Fit\n" \
+          "\n" \
+          "substitui <num>: \t\tinforma ao simulador que ele sera executado "\
+          "com o algoritmo de substituição de páginas de número:\n" \
+          "\t\t1 - Optimal\n" \
+          "\t\t2 - Second-Chance\n" \
+          "\t\t3 - Clock\n" \
+          "\t\t4 - Least Recently Used\n" \
+          "\n" \
+          "executa <intervalo>: \t\texecuta o simulador e imprime o estado " \
+          "de memorias na tela de <intervalo> em <intervalo> segundos\n" \
+          "\n" \
+          "sai: \t\tfinaliza o simulador"
+          "\n\n"
   end
 end
 

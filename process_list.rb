@@ -12,7 +12,7 @@
 # *************************************
 
 class ProcessList
-  attr_accessor :total, :virtual, :lines
+  attr_accessor :total, :virtual, :lines, :s, :page_size
 
   #
   # A funcao recebe como entrada um vetor de linhas do arquivo de trace
@@ -21,7 +21,7 @@ class ProcessList
   #
   def initialize(path, pid_dictionary)
     file_lines = trace_file_lines(path)
-    @total, @virtual = file_lines.shift.split(" ").map(&:to_i)
+    @total, @virtual, @s, @page_size = file_lines.shift.split(" ").map(&:to_i)
     @lines = file_lines.map { |line| AProcess.new(line, pid_dictionary) }
   end
 

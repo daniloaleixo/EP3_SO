@@ -11,13 +11,20 @@
 
 # *************************************
 
-
 #
-# Estrutura usada em cada posicao do vetor que contém
-# todas as paginas que estao na memoria fisica
+# Estrutura que representa uma página de memória virtual.
+#    on_physical: true se a página está na memória física, false caso contrário
+#  recently_used: true se a página foi usada recentemente, false caso contrário
+# physical_index: índice do quadro de página que contém esta página
+#            pid: PID do processo que está ocupando essa página (mesmo que o
+#                 processo não precise da página inteira, ele vai ocupá-la
+#                 exclusivamente para ele - conforme dito pelo professor no
+#                 PACA)
+#                 
 #
 class MemoryPage
-  attr_accessor :pid, :on_physical, :recently_used, :physical_index, :r
+  attr_accessor :on_physical, :recently_used, :physical_index, :r,
+                :pid
   
   def initialize
     @pid = -1

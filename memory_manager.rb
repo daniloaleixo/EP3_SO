@@ -19,6 +19,10 @@ class MemoryManager
   # vetor de todas as paginas que estarao na memoria virtual
   @@memory_pages_table = nil
   
+  # seletor dos algoritmos de gerência de memória e substituição de páginas
+  @@memory_management_mode = 1
+  @@page_replacement_mode = 1
+
   @@next_fit_last_assigned = 0
   
   # physical_memory_page_reference guarda para cada quadro de pagina o indice
@@ -34,39 +38,50 @@ class MemoryManager
   # 
   # Inicia as estruturas de dados usadas
   #
-  def self.start(total_virtual_pages, total_physical_frame_pages, s_size, p_size)
-    # Memory_pages_table: É um array com todas as paginas que estarão na memoria
-    # virtual, então para cada segmento que existe um processo em memory_segment_list
-    # suas respectivas páginas estarão representadas nessa estrutura.
-    # Cada célula deste array possui as seguintes informações: PID do processo 
-    # representado nesta página; se esta página está referenciada dentro da memória 
-    # física, e seu índice; e se foi usada recentemente.
-    # Aqui criamos esse array
+  def self.start(process_list)
+    @@s = process_list.s
+    @@p = process_list.page_size
+    @@addresses_per_page = @@p / @@s
+
+    # memory_pages_table: É um array com todas as páginas que estarão na memória
+    # virtual. Cada célula é um objeto de MemoryPage.
+    # (vide memory_page.rb para descrição da classe)
+    total_virtual_pages = process_list.virtual / @@p
     @@memory_pages_table = Array.new(total_virtual_pages).map { MemoryPage.new }
 
-    # Physical_memory_page_reference:  Para a memória física temos dois arrays, o
-    # physical_memory_page_reference tem para cada quadro de página na memória física
-    # o índice da página no array memory_pages_table.
-    # Aqui criamos o array
+    # physical_memory_page_reference: tem para cada quadro de página na memória
+    # física o índice (no array memory_pages_table) da página correspondente.
+    total_physical_frame_pages = process_list.total / @@p
     @@physical_memory_page_reference = Array.new(total_physical_frame_pages, -1)
     
-    # Physical_memory: enquanto que no physical_memory temos o PID do processo que
-    # esta sendo executado na posição de memória. Obs: se não tiver nenhum processo
+    # Physical_memory: physical_memory temos o PID do processo que está usando
+    # aquela posição de memória. Obs: se não tiver nenhum processo
     # então recebe “-1” que é representado por 255, em binário 1111 1111.
-    # aqui criamos esse array 
-    @@physical_memory = Array.new(total_physical_frame_pages, 255)
+    total_physical_addresses = process_list.total / @@s
+    @@physical_memory = Array.new(total_physical_addresses, 255)
 
-    @@s = s_size
-    @@p = p_size
-
-    # bitmap: vetor de booleanos que contém uma posição para cada endereço da
-    # memória virtual, contendo false nos índices dos endereços que estão
-    # ocupados e true nos índices dos endereços vazios.
-    @@bitmap = BitArray.new(total_virtual_pages * @@p / @@s)
+    # bitmap: vetor de bits que contém uma posição para cada byte da memória
+    # virtual, contendo 0 nos índices dos bytes que estão livres e 1 nos índices
+    # dos bytes que estão ocupados.
+    # 
+    # Estamos representando o bitmap por baixo dos panos com um vetor contendo
+    # um bit por página virtual em vez de um bit por byte de memória. A
+    # justificativa para isso é que facilita a implementação dos algoritmos
+    # de gerência. Já que o mínimo que é reservado para um processo é uma página
+    # inteira, faz sentido manter um bit por página, pois haveria muitas
+    # repetições de bits caso usássemos um bit por byte de memória.
+    @@bitmap = BitArray.new(process_list.virtual / @@p)
 
     update_memory_files
   end
 
+  def self.memory_management_mode=(value)
+    @@memory_management_mode = value
+  end
+
+  def self.page_replacement_mode=(value)
+    @@page_replacement_mode = value
+  end
 
   # Reescreve os arquivos binários que representam as memórias virtual e física
   def self.update_memory_files
@@ -88,44 +103,36 @@ class MemoryManager
   end
 
   # 
-  # A funcao atualiza o vetor memory_pages_table, entao quando um novo processo 
-  # eh colocado no sistema a funcao mapeia as paginas que este processo utiliza 
-  # para memory_pages_table e no caso da exclusao do processo coloca -1, indicando
-  # que as paginas estao livres na memoria virtual
+  # Atualiza o vetor memory_pages_table, escrevendo o PID do processo que cada
+  # página está usando OU escrevendo -1 nas páginas que não estão mais sendo
+  # usadas.
   # 
-  def self.update_memory_pages_table(opts={})
-    pid = opts[:pid]
-    initial_page_position = opts[:initial_page_position]
-    size_in_pages = opts[:size_in_pages]
-    mode = opts[:mode]
-    
-    for i in initial_page_position..(initial_page_position + size_in_pages - 1) do
-      case mode
-      when :add
-        @@memory_pages_table[i].pid = pid
-      when :remove
-        @@memory_pages_table[i].pid = -1
-      end
+  def self.update_memory_pages_table(pid: nil, initial_page_position: nil,
+                                     size_in_pages: nil, remove: false)
+    i = initial_page_position
+    size_in_pages.times do
+      @@memory_pages_table[i].pid = remove ? -1 : pid
+      i += 1
     end
   end
 
   #
   # Adiciona um processo na lista encadeada segmentos de memoria
   #
-  def self.add_process(process, initial_page_position)
-    allocation_units = (process.number_of_bytes / 16.0).ceil
-
+  def self.add_process(time_event)
+    process = time_event.process
+    initial_page_position = memory_management_algorithm(process.number_of_bytes)
     process.initial_page_position = initial_page_position
 
     i = initial_page_position
-    allocation_units.times do
+    size_in_pages = (process.number_of_bytes / @@p).ceil
+    size_in_pages.times do
       @@bitmap[i] = 1
       i += 1
     end
 
-    update_memory_pages_table(pid: process.pid, size_in_pages: allocation_units,
-                              initial_page_position: initial_page_position,
-                              mode: :add)
+    update_memory_pages_table(pid: process.pid, size_in_pages: size_in_pages,
+                              initial_page_position: initial_page_position)
   end
 
   #
@@ -146,13 +153,12 @@ class MemoryManager
     size_in_pages = allocation_units
 
     pid_dictionary.delete(process.pid)
-    update_memory_pages_table(mode: :remove,
-                              initial_page_position: initial_page_position,
-                              size_in_pages: size_in_pages)
+    update_memory_pages_table(initial_page_position: initial_page_position,
+                              size_in_pages: size_in_pages, remove: true)
   end
 
   #
-  # Implementacao do algoritmo de gerencia de espaco livre -> First Fit
+  # Algoritmo de gerência de espaco livre -> First Fit
   # Se percorre o bitmap e se devolver o índice da primeira posição que
   # comporta process_size
   #
@@ -171,6 +177,7 @@ class MemoryManager
       end
       i += 1
     end
+    p "VOU RETORNAR NIL"
     nil
   end
 
@@ -266,7 +273,6 @@ class MemoryManager
       end
     end
 
-    p worst_found 
     worst_found
   end
 
@@ -332,7 +338,7 @@ class MemoryManager
   # Lida com os acessos às posições de memória. Varre a memória física para
   # saber se a página solicitada está presente nela. Se não
   # estiver, é preciso usar um algoritmo de substituição de página
-  def self.memory_access(time_event, page_replacement_mode)
+  def self.memory_access(time_event)
     page_position = page_index_of_memory_position(time_event)
     page = @@memory_pages_table[page_position]
     
@@ -347,7 +353,7 @@ class MemoryManager
 
     # Se chegamos nessa linha, é porque a página solicitada não está na memória
     # física. Então, temos que usar um algoritmo de substituição de página.
-    physical_index = page_replacement_algorithm(page_replacement_mode, page)
+    physical_index = page_replacement_algorithm(page)
 
     # se existe uma pagina que iremos remover da memoria fisica fazemos:
     if @@physical_memory_page_reference[physical_index] != -1
@@ -371,25 +377,24 @@ class MemoryManager
   end
 
   #
-  # A funcao usa o algoritmo de gerencia de memoria livre de acordo com o que
-  # o usuario escolheu
+  # Usa o algoritmo de gerência de memória livre selecionado
   # 
-  def self.memory_management_algorithm(memory_management_mode, number_of_bytes)
-    size = (number_of_bytes / @@s).ceil
-    case memory_management_mode
-    when 1 then first_fit(size)
-    when 2 then next_fit(size)
-    when 3 then best_fit(size)
-    when 4 then worst_fit(size)
+  def self.memory_management_algorithm(number_of_bytes)
+    process_size = (number_of_bytes / @@p).ceil
+    case @@memory_management_mode
+    when 1 then first_fit(process_size)
+    when 2 then next_fit(process_size)
+    when 3 then best_fit(process_size)
+    when 4 then worst_fit(process_size)
     end
   end
 
 
   #
-  # A funcao usa o algoritmo de substituicao de pagina de acordo com o que o usuario escolheu
+  # Usa o algoritmo de substituição de página selecionado
   # 
-  def self.page_replacement_algorithm(page_replacement_mode, memory_page)
-    case page_replacement_mode
+  def self.page_replacement_algorithm(memory_page)
+    case @@page_replacement_mode
     when 1 then not_recently_used_page
     when 2 then first_in_first_out(memory_page)
     when 3 then second_chance(memory_page)
@@ -419,17 +424,18 @@ class MemoryManager
       print "t = #{t}s\n"
     end
 
-    print "Bitmap: #{@@bitmap}\n"
+    print "Bitmap:\n"
+    print @@bitmap.to_s.split('').map { |c| "#{c} " * @@p }.join "\n"
+    print "\n\n"
     
     print "Estado da memória virtual:\n"
-    p @@memory_pages_table.map(&:pid)
-
+    print @@memory_pages_table.map { |pg| "#{pg.pid}".rjust(4) * @@p }.join "\n"
     print "\n"
 
     print "Estado da memória física:\n"
-    p @@physical_memory
-    p @@physical_memory_page_reference
-    p "------------------------------------------------------------------------"
+    print "#{@@physical_memory.map { |n| n.to_s.rjust(4) }.join}\n"
+    print @@physical_memory_page_reference.map { |n| n.to_s.rjust(4) }.join
+    print "\n#{'-' * 100}\n"
   end
 
   # Reinicializa as estruturas de dados usadas no EP
