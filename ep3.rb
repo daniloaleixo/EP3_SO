@@ -59,8 +59,8 @@ loop do
     # coloca os processos 'em execução'
     print_interval = (option.first or 1).to_i
 
+    # initiate_time_counter = Time.now
     for i in 0..(time_manager.time_events_list.keys.max) do
-      initiate_time_counter = Time.now
       
       # o fluxo abaixo reseta os bits R (recently_used) de todas as páginas
       # a cada 3 segundos
@@ -90,10 +90,8 @@ loop do
       end
       MemoryManager.print_everything(i) if i % print_interval == 0
 
-      time_elapsed = Time.now - initiate_time_counter
-      # dorme até chegarmos ao próximo segundo
-      sleep(1 - time_elapsed)
     end
+    # time_elapsed = Time.now - initiate_time_counter
 
     MemoryManager.print_everything(-1)
     # reinicializa as variaveis para cada execucao
