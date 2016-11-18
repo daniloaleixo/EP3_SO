@@ -430,7 +430,8 @@ class MemoryManager
     print "\n"
 
     print "Estado da memória física:\n"
-    print "#{@@physical_memory.map { |n| n.to_s.rjust(4) }.join}\n"
+    print "#{@@physical_memory.map { |n| n.to_s.rjust(4) * @@p }.join("\n")}\n"
+    # TODO linha abaixo é só pra depuração - remover antes de entregar
     print @@physical_memory_page_reference.map { |n| n.to_s.rjust(4) }.join
     print "\n#{'-' * 100}\n"
   end
