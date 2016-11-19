@@ -450,20 +450,16 @@ class MemoryManager
     # varre primeiramente a memoria fisica e verifica se existe algum espaco livre
     index = @@physical_memory_page_reference.index(-1)
 
-    p @@circular_list, index
-
     # se nao tem nenhum espaco livre entao pegamos o elemento mais antigo e verificamos o bit R
     if index.nil?
       while @@circular_list[@@circular_list_last_reference].r == 1
-        print "o bit r eh 1 last: ", @@circular_list_last_reference, "\n"
         @@circular_list[@@circular_list_last_reference].r = 0
         @@circular_list_last_reference = (@@circular_list_last_reference + 1 ) % @@circular_list.size
       end
-      p "aqui o bit r eh zero ja", @@circular_list[@@circular_list_last_reference].r, "\n"
       elemento = @@circular_list[@@circular_list_last_reference]
       @@circular_list.delete_at(@@circular_list_last_reference)
       @@circular_list_last_reference = (@@circular_list_last_reference + 1 ) % @@circular_list.size
-      print "o bit r e zero devolver ", elemento.physical_index, "\n"
+      @@circular_list << memory_page
       return elemento.physical_index
     else
       @@circular_list << memory_page
