@@ -435,6 +435,7 @@ class MemoryManager
         elemento_mais_antigo = @@fifo_queue.shift
       end
       # quando acharmos um com bit 0 devolvemos o indice 
+      @@fifo_queue << memory_page
       return elemento_mais_antigo.physical_index
     else
       @@fifo_queue << memory_page
