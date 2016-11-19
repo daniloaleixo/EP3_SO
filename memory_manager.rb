@@ -47,6 +47,9 @@ class MemoryManager
 
   @@time_now = 0
 
+  @@page_faults = 0
+  @@quanto_rodei_para_achar_espaco_livre = 0
+
 
   
   # 
@@ -102,6 +105,10 @@ class MemoryManager
 
    def self.get_time_now()
     return @@time_now
+  end
+
+  def self.get_page_faults()
+    return @@page_faults
   end
 
   def self.get_page_replacement_mode()
@@ -435,6 +442,7 @@ class MemoryManager
         elemento_mais_antigo = @@fifo_queue.shift
       end
       # quando acharmos um com bit 0 devolvemos o indice 
+      @@fifo_queue << memory_page
       return elemento_mais_antigo.physical_index
     else
       @@fifo_queue << memory_page
@@ -488,6 +496,7 @@ class MemoryManager
 
     # Se chegamos nessa linha, é porque a página solicitada não está na memória
     # física. Então, temos que usar um algoritmo de substituição de página.
+    @@page_faults += 1
     physical_index = page_replacement_algorithm(page)
 
     # se existe uma pagina que iremos remover da memoria fisica fazemos:

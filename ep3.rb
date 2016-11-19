@@ -39,7 +39,6 @@ page_replacement_mode = 1
 #   option = got.strip.split(" ")
 
   option = ARGV
-  print option
 
   # case option.shift
   # when "sai" then break
@@ -53,18 +52,19 @@ page_replacement_mode = 1
     MemoryManager.start process_list
     
   # when "espaco"
-    MemoryManager.memory_management_mode = option[2].to_i
+  p option
+    MemoryManager.memory_management_mode = option[1].to_i
 
   # when "substitui"
     if option.first.to_i == 4
       raise 'Algoritmo ainda não implementado'
       exit(0)
     end
-    MemoryManager.page_replacement_mode = option[3].to_i
+    MemoryManager.page_replacement_mode = option[2].to_i
     
   # when "executa"
     # coloca os processos 'em execução'
-    print_interval = (option[4] or 1).to_i
+    print_interval = (option[3] or 1).to_i
 
     # se o algoritmo for optimal precisamos construir a lista de acessos 
     # de memoria de pagina
@@ -113,7 +113,10 @@ page_replacement_mode = 1
     pid_dictionary = {}
     memory_segments_list = nil
 
-    MemoryManager.clean     
+    MemoryManager.clean 
+
+    p MemoryManager.get_page_faults()
+
   # else
   #   print "Comando inválido\n" \
   #         "Comandos: \ncarrega <arquivo>: \tcarrega arquivo para a simulação\n" \
