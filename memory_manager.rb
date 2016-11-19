@@ -35,8 +35,19 @@ class MemoryManager
   # Fila de páginas que será usada no Second Chance
   @@fifo_queue = []
 
+  # Lista circular que é usada no algoritmo de Clock
   @@circular_list = []
   @@circular_list_last_reference = 0
+
+  # Cria a estrutura para sabermos qual memoria sera acessada antes
+  @@optimal_access_list = []
+  # cria um hash para guardar a posicao inicial das paginas dos processos na memory_page_table
+  @@process_initial_page_position = {}
+
+
+  @@time_now = 0
+
+
   
   # 
   # Inicia as estruturas de dados usadas
@@ -83,6 +94,18 @@ class MemoryManager
 
   def self.page_replacement_mode=(value)
     @@page_replacement_mode = value
+  end
+
+  def self.time_now=(value)
+    @@time_now = value
+  end
+
+   def self.get_time_now()
+    return @@time_now
+  end
+
+  def self.get_page_replacement_mode()
+    return @@page_replacement_mode
   end
 
   # Reescreve os arquivos binários que representam as memórias virtual e física
@@ -135,6 +158,9 @@ class MemoryManager
 
     update_memory_pages_table(pid: process.pid, size_in_pages: size_in_pages,
                               initial_page_position: initial_page_position)
+
+    # insere no hash para sabermos qual a primeira pagina do processo
+    @@process_initial_page_position[process.pid] = initial_page_position
   end
 
   #
@@ -276,38 +302,121 @@ class MemoryManager
     worst_found
   end
 
-  #
-  # Implementação do algortimo de substituicao de pagina -> NRU
-  # (Not Recently Used)
-  #
-  def self.not_recently_used_page
-    # varre primeiramente a memoria fisica e verifica se existe algum espaco livre
-    index = @@physical_memory_page_reference.index(-1)
-    return index unless index.nil?
-    
-    # se nao achar espaco livre precisamos verificar quais paginas nao foram usadas 
-    # recentemente e para isso acessamos essa informacao na memory_pages_table
-    @@physical_memory_page_reference.each_with_index { |el, i|
-      return i unless @@memory_pages_table[el].recently_used
-    }
-    return 0
+  def self.build_optimal_queue(time_events_list)
+
+    # pega todos os memory acess e coloca numa lista de hashs, 
+    # indicando o pid do processo e uma lista com os acessos de memoria
+    # a estrutura fica assim:
+    # {
+    #   pid: pid_processo
+    #   memory_accesses: {
+    #     pagina: [lista de instantes que a pagina eh acessada]
+    #   }
+    # }
+    for i in 0..(time_events_list.keys.max) do
+      time_events_list[i].each do |time_event|
+        if time_event.mode == :memory_access
+          if not @@optimal_access_list.any? {|h| h[:pid] == time_event.process.pid}
+
+            # os memory access serao inseridos de forma que a chave eh a pagina
+            # e o value seja os instantes em que ela sera acessada
+            hash = {}
+            time_event.process.memory_accesses.each do |memory_access|
+              p memory_access
+              page_memory_access = (1.0 * memory_access[0] / @@p).floor
+
+              # ainda nao temos essa memoria no nosso hash
+              if hash[page_memory_access] == nil
+                hash[page_memory_access] = [memory_access[1]]
+              else
+                # se ja tivermos temos que incluir no vetor
+                hash[page_memory_access] << memory_access[1]
+              end
+            end
+            @@optimal_access_list << {
+              pid: time_event.process.pid,
+              memory_accesses: hash
+            }
+          end
+        end
+      end
+    end
+    p @@optimal_access_list
   end
 
+
   #
-  # Implementação do algortimo de substituicao de pagina -> FIFO
-  # (First In First Out)
+  # Implementação do algortimo de substituicao de pagina -> Optimal
+
+  # O algoritmo tem que verificar todos os elementos da memoria fisica, ver 
+  # qual pagina sera acessada novamente no futuro, se nao for acessada, ela sera 
+  # escolhida para sair da memoria fisica, se todas as paginas forem ser acessadas no futuro
+  # escolhemos a que demorará mais tempo para ser acessada
   #
-  def self.first_in_first_out(memory_page)
-    # varre primeiramente a memoria fisica e verifica se existe algum espaco livre
+  def self.optimal(memory_page)
     index = @@physical_memory_page_reference.index(-1)
+    next_to_get_out = 0
+    index_for_getting_out = -1
+    page_acesses = []
 
 
     if index.nil?
-      return @@fifo_queue.shift.physical_index
+      # percorre todas as paginas na memoria e vamos verificar em @@optimal_access_list
+      # qual sera o processo que esta na memoria e precisa sair, 
+      # pois sera o ultimo que sera acessado entre eles
+      for i in 0..@@physical_memory_page_reference.size do
+        # primeiro precisamos nos certificar que a memoria que estamos acessando nao foi retirada
+        # da tabela de paginas devido ao termino do processo
+        if @@physical_memory_page_reference[i] != -1 and 
+          @@physical_memory_page_reference[i] != nil and
+          @@memory_pages_table[@@physical_memory_page_reference[i]].pid != -1 and
+          @@memory_pages_table[@@physical_memory_page_reference[i]].pid != nil
+
+
+
+          pid = @@memory_pages_table[@@physical_memory_page_reference[i]].pid
+
+          # vamos primeiro pegar a posicao na tabela de paginas da memoria virtual da memoria
+          # que estamos tentando acessar, alem da posicao da primeira pagina desse processo
+          # assim temos o endereco local da pagina
+          local_page_index = @@physical_memory_page_reference[i] - @@process_initial_page_position[pid]
+
+
+
+          # vamos percorrer os acessos de memoria ate acharmos o PID e a pagina que 
+          # desejamos investigar
+          @@optimal_access_list.each do |process|
+            if process[:pid] == pid
+              page_acesses = process[:memory_accesses][local_page_index]
+              
+              # vamos verificar todos os instantes de tempo que essa pagina sera acessada
+              for j in 0..page_acesses.size do
+
+                if page_acesses[j] != nil and page_acesses[j] > @@time_now
+                  # se a pagina que estamos olhando for demorar mais para ser acessada
+                  # do que o next_to_get_out entao atualizamos a variavel
+                  if page_acesses[j] > next_to_get_out
+                    next_to_get_out = page_acesses[j]
+                    index_for_getting_out = i
+                  end
+                  break
+                end
+              end
+              # se a pagina nao vai mais ser acessada no futuro
+              if j == page_acesses.size and page_acesses[j - 1] < @@time_now
+                return i
+              end
+
+            end
+          end
+        end
+      end
+      return index_for_getting_out
     else
-      @@fifo_queue << memory_page
       return index
     end
+
+
   end
 
   #
@@ -423,10 +532,9 @@ class MemoryManager
   # 
   def self.page_replacement_algorithm(memory_page)
     case @@page_replacement_mode
-    when 1 then not_recently_used_page
-    when 2 then first_in_first_out(memory_page)
-    when 3 then second_chance(memory_page)
-    when 4 then clock(memory_page)  
+    when 1 then optimal(memory_page)
+    when 2 then second_chance(memory_page)
+    when 3 then clock(memory_page)
     end
   end
 

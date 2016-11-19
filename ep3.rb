@@ -40,7 +40,7 @@ loop do
 
   case option.shift
   when "sai" then break
-  when "c"
+  when "carrega"
     # extrai os dados do arquivo de trace e armazena num objeto ProcessList
     process_list = ProcessList.new(option.first, pid_dictionary)
 
@@ -49,15 +49,25 @@ loop do
     # Inicializa as estruturas de dados
     MemoryManager.start process_list
     
-  when "s"
+  when "espaco"
     MemoryManager.memory_management_mode = option.first.to_i
 
-  when "d"
+  when "substitui"
+    if option.first.to_i == 4
+      raise 'Algoritmo ainda não implementado'
+      exit(0)
+    end
     MemoryManager.page_replacement_mode = option.first.to_i
     
-  when "a"
+  when "executa"
     # coloca os processos 'em execução'
     print_interval = (option.first or 1).to_i
+
+    # se o algoritmo for optimal precisamos construir a lista de acessos 
+    # de memoria de pagina
+    if MemoryManager.get_page_replacement_mode == 1
+      MemoryManager.build_optimal_queue time_manager.time_events_list
+    end
 
     # initiate_time_counter = Time.now
     for i in 0..(time_manager.time_events_list.keys.max) do
@@ -89,6 +99,7 @@ loop do
         MemoryManager.update_memory_files
       end
       MemoryManager.print_everything(i) if i % print_interval == 0
+      MemoryManager.time_now = i
 
     end
     # time_elapsed = Time.now - initiate_time_counter
