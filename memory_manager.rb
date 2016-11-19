@@ -32,8 +32,11 @@ class MemoryManager
   # guarda o estado atual da memória física (para imprimi-la)
   @@physical_memory = nil
 
-  # Fila de páginas que será usada no FIFO
+  # Fila de páginas que será usada no Second Chance
   @@fifo_queue = []
+
+  @@circular_list = []
+  @@circular_list_last_reference = 0
   
   # 
   # Inicia as estruturas de dados usadas
@@ -332,6 +335,34 @@ class MemoryManager
     end
   end
 
+   #
+  # Implementação do algortimo de substituicao de pagina -> Clock
+  #
+  def self.clock(memory_page)
+    # varre primeiramente a memoria fisica e verifica se existe algum espaco livre
+    index = @@physical_memory_page_reference.index(-1)
+
+    p @@circular_list, index
+
+    # se nao tem nenhum espaco livre entao pegamos o elemento mais antigo e verificamos o bit R
+    if index.nil?
+      while @@circular_list[@@circular_list_last_reference].r == 1
+        print "o bit r eh 1 last: ", @@circular_list_last_reference, "\n"
+        @@circular_list[@@circular_list_last_reference].r = 0
+        @@circular_list_last_reference = (@@circular_list_last_reference + 1 ) % @@circular_list.size
+      end
+      p "aqui o bit r eh zero ja", @@circular_list[@@circular_list_last_reference].r, "\n"
+      elemento = @@circular_list[@@circular_list_last_reference]
+      @@circular_list.delete_at(@@circular_list_last_reference)
+      @@circular_list_last_reference = (@@circular_list_last_reference + 1 ) % @@circular_list.size
+      print "o bit r e zero devolver ", elemento.physical_index, "\n"
+      return elemento.physical_index
+    else
+      @@circular_list << memory_page
+      return index
+    end
+  end
+
   # Lida com os acessos às posições de memória. Varre a memória física para
   # saber se a página solicitada está presente nela. Se não
   # estiver, é preciso usar um algoritmo de substituição de página
@@ -395,6 +426,7 @@ class MemoryManager
     when 1 then not_recently_used_page
     when 2 then first_in_first_out(memory_page)
     when 3 then second_chance(memory_page)
+    when 4 then clock(memory_page)  
     end
   end
 

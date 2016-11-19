@@ -52,7 +52,7 @@ loop do
   when "s"
     MemoryManager.memory_management_mode = option.first.to_i
 
-  when "substitui"
+  when "d"
     MemoryManager.page_replacement_mode = option.first.to_i
     
   when "a"
