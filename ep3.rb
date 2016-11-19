@@ -28,19 +28,22 @@ memory_management_mode = 1
 # identificador do algoritmo de substituicao de pagina
 page_replacement_mode = 1
 
-loop do
-  print "[ep3]: "
-  # pega a linha de comando escrita pelo usuario
-  got = gets
-  if got.nil?
-    print "\n"
-    break
-  end
-  option = got.strip.split(" ")
+# loop do
+#   print "[ep3]: "
+#   # pega a linha de comando escrita pelo usuario
+#   got = gets
+#   if got.nil?
+#     print "\n"
+#     break
+#   end
+#   option = got.strip.split(" ")
 
-  case option.shift
-  when "sai" then break
-  when "carrega"
+  option = ARGV
+  print option
+
+  # case option.shift
+  # when "sai" then break
+  # when "carrega"
     # extrai os dados do arquivo de trace e armazena num objeto ProcessList
     process_list = ProcessList.new(option.first, pid_dictionary)
 
@@ -49,19 +52,19 @@ loop do
     # Inicializa as estruturas de dados
     MemoryManager.start process_list
     
-  when "espaco"
-    MemoryManager.memory_management_mode = option.first.to_i
+  # when "espaco"
+    MemoryManager.memory_management_mode = option[2].to_i
 
-  when "substitui"
+  # when "substitui"
     if option.first.to_i == 4
       raise 'Algoritmo ainda não implementado'
       exit(0)
     end
-    MemoryManager.page_replacement_mode = option.first.to_i
+    MemoryManager.page_replacement_mode = option[3].to_i
     
-  when "executa"
+  # when "executa"
     # coloca os processos 'em execução'
-    print_interval = (option.first or 1).to_i
+    print_interval = (option[4] or 1).to_i
 
     # se o algoritmo for optimal precisamos construir a lista de acessos 
     # de memoria de pagina
@@ -98,41 +101,41 @@ loop do
         # atualiza os arquivos binarios
         MemoryManager.update_memory_files
       end
-      MemoryManager.print_everything(i) if i % print_interval == 0
+      # MemoryManager.print_everything(i) if i % print_interval == 0
       MemoryManager.time_now = i
 
     end
     # time_elapsed = Time.now - initiate_time_counter
 
-    MemoryManager.print_everything(-1)
+    # MemoryManager.print_everything(-1)
     # reinicializa as variaveis para cada execucao
     process_list = nil
     pid_dictionary = {}
     memory_segments_list = nil
 
     MemoryManager.clean     
-  else
-    print "Comando inválido\n" \
-          "Comandos: \ncarrega <arquivo>: \tcarrega arquivo para a simulação\n" \
-          "espaco <num>: \t\tinforma ao simulador que ele sera executado com "\
-          "o algoritmo de gerenciamento de espaco livre de número:\n" \
-          "\t\t1 - First Fit\n" \
-          "\t\t2 - Next Fit\n" \
-          "\t\t3 - Best Fit\n" \
-          "\t\t4 - Worst Fit\n" \
-          "\n" \
-          "substitui <num>: \t\tinforma ao simulador que ele sera executado "\
-          "com o algoritmo de substituição de páginas de número:\n" \
-          "\t\t1 - Optimal\n" \
-          "\t\t2 - Second-Chance\n" \
-          "\t\t3 - Clock\n" \
-          "\t\t4 - Least Recently Used\n" \
-          "\n" \
-          "executa <intervalo>: \t\texecuta o simulador e imprime o estado " \
-          "de memorias na tela de <intervalo> em <intervalo> segundos\n" \
-          "\n" \
-          "sai: \t\tfinaliza o simulador"
-          "\n\n"
-  end
-end
+  # else
+  #   print "Comando inválido\n" \
+  #         "Comandos: \ncarrega <arquivo>: \tcarrega arquivo para a simulação\n" \
+  #         "espaco <num>: \t\tinforma ao simulador que ele sera executado com "\
+  #         "o algoritmo de gerenciamento de espaco livre de número:\n" \
+  #         "\t\t1 - First Fit\n" \
+  #         "\t\t2 - Next Fit\n" \
+  #         "\t\t3 - Best Fit\n" \
+  #         "\t\t4 - Worst Fit\n" \
+  #         "\n" \
+  #         "substitui <num>: \t\tinforma ao simulador que ele sera executado "\
+  #         "com o algoritmo de substituição de páginas de número:\n" \
+  #         "\t\t1 - Optimal\n" \
+  #         "\t\t2 - Second-Chance\n" \
+  #         "\t\t3 - Clock\n" \
+  #         "\t\t4 - Least Recently Used\n" \
+  #         "\n" \
+  #         "executa <intervalo>: \t\texecuta o simulador e imprime o estado " \
+  #         "de memorias na tela de <intervalo> em <intervalo> segundos\n" \
+  #         "\n" \
+  #         "sai: \t\tfinaliza o simulador"
+  #         "\n\n"
+  # end
+# end
 

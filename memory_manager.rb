@@ -322,7 +322,6 @@ class MemoryManager
             # e o value seja os instantes em que ela sera acessada
             hash = {}
             time_event.process.memory_accesses.each do |memory_access|
-              p memory_access
               page_memory_access = (1.0 * memory_access[0] / @@p).floor
 
               # ainda nao temos essa memoria no nosso hash
@@ -341,7 +340,6 @@ class MemoryManager
         end
       end
     end
-    p @@optimal_access_list
   end
 
 
