@@ -44,10 +44,7 @@ class MemoryManager
   # cria um hash para guardar a posicao inicial das paginas dos processos na memory_page_table
   @@process_initial_page_position = {}
 
-
   @@time_now = 0
-
-
   
   # 
   # Inicia as estruturas de dados usadas
@@ -201,7 +198,6 @@ class MemoryManager
       end
       i += 1
     end
-    p "VOU RETORNAR NIL"
     nil
   end
 
