@@ -57,7 +57,7 @@ class MemoryManager
     # Physical_memory: physical_memory temos o PID do processo que está usando
     # aquela posição de memória. Obs: se não tiver nenhum processo
     # então recebe “-1” que é representado por 255, em binário 1111 1111.
-    @@physical_memory = Array.new(total_physical_frame_pages, 255)
+    @@physical_memory = Array.new(total_physical_frame_pages, -1)
 
     # bitmap: vetor de bits que contém uma posição para cada byte da memória
     # virtual, contendo 0 nos índices dos bytes que estão livres e 1 nos índices
@@ -86,16 +86,14 @@ class MemoryManager
   def self.update_memory_files
     # atualiza o arquivo de memória física
     print_format = @@physical_memory.map { |el| [el] * @@p }.flatten
-    pack_argument = 'c' * print_format.size
+    pack_argument = 'N' * print_format.size
     File.open("/tmp/ep2.mem", "wb") do |file|
       file << print_format.pack(pack_argument)
     end
 
     # atualiza o arquivo de memória virtual
-    print_format = @@memory_pages_table.map { |el|
-      [el.pid == -1 ? 255 : el.pid] * @@p
-    }.flatten
-    pack_argument = 'c' * print_format.size
+    print_format = @@memory_pages_table.map { |el| [el.pid] * @@p }.flatten
+    pack_argument = 'N' * print_format.size
     File.open("/tmp/ep2.vir", "wb") do |file|
       file << print_format.pack(pack_argument)
     end
