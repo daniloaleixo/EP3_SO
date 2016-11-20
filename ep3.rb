@@ -40,7 +40,7 @@ loop do
 
   case option.shift
   when "sai" then break
-  when "c"
+  when "carrega"
     # extrai os dados do arquivo de trace e armazena num objeto ProcessList
     process_list = ProcessList.new(option.first, pid_dictionary)
 
@@ -49,13 +49,13 @@ loop do
     # Inicializa as estruturas de dados
     MemoryManager.start process_list
     
-  when "s"
+  when "espaco"
     MemoryManager.memory_management_mode = option.first.to_i
 
   when "substitui"
     MemoryManager.page_replacement_mode = option.first.to_i
     
-  when "a"
+  when "executa"
     # coloca os processos 'em execução'
     print_interval = (option.first or 1).to_i
 

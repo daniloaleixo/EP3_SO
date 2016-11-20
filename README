@@ -1,0 +1,66 @@
+EP3 - Sistemas Operacionais - 20162
+Prof. Daniel Batista
+
+Danilo Aleixo Gomes de Souza nUSP: 7972370
+Carlos Augusto Motta de Lima nUSP: 7991228
+
+
+----INSTALAÇÃO
+  Para rodar o EP, basta dar permissão de execução para o arquivo ep3.rb.
+  Para isto, basta rodar o comando make.
+
+  Em seguida, basta executar diretamente através do comando:
+
+  ./ep3.rb
+
+  ----RUBY
+    Este EP foi desenvolvido em Ruby, na versão 2.2.3p173
+    Certifique-se de que a versão instalada é essa.
+
+    Na ausência do Ruby 2.2.3p173, siga os passos para instalá-lo:
+
+    CASO TENHA RVM INSTALADO:
+        $ rvm install 2.2.3
+        $ rvm use 2.2.3
+
+    CASO NÃO TENHA O RVM INSTALADO
+
+    1) Faça o download do pacote através do seguinte endereço:
+      https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.3.tar.gz
+      Observação: este endereço foi retirado da página oficial do Ruby.
+      Caso deseje fazer o download diretamente de lá, este é o endereço:
+      https://www.ruby-lang.org/en/news/2015/08/18/ruby-2-2-3-released/
+
+    2) Extraia o arquivo .tar.gz
+
+    3) Acesse o diretório onde você extraiu o arquivo.
+
+    4) Execute os seguintes comandos:
+
+      ./configure
+      make
+
+    5) Para confirmar se está usando a versão correta, rode o seguinte comando:
+
+      ruby -v
+
+    Se você já estava usando uma outra versão de Ruby e a instalação da nova
+    versão não foi bem sucedida, recomenda-se usar o pacote RVM (Ruby Version
+    Manager). Mais informações sobre como instalá-lo e como mudar a versão do
+    Ruby neste link: https://rvm.io/
+
+----EXECUÇÃO
+  O EP deve ser executado conforme descrito no enunciado. Algumas observações:
+
+  1) o valor padrão para algoritmo de gerência de memória ou para algoritmo de
+     substituição de página é 1. Ou seja, se você tentar "executar <intervalo>"
+     no EP sem usar os comandos "espaco <numero>" ou "substituicao <numero>"
+     antes, ele usará os algoritmos de número 1 (ou seja, First Fit e Optimal) 
+
+  2) para cada vez que você rodar o comando "executa <intervalo>", no fim da
+     execução o programa limpará tudo o que foi carregado com a instrução
+     "carrega <arquivo>". Logo, você deverá usar "carrega <arquivo>" antes de
+     cada chamada de "executa <intervalo>"
+
+  3) se você usar a instrução "executa <intervalo>" sem passar nenhum valor para
+     intervalo, o programa vai imprimir os dados solicitados a cada segundo
