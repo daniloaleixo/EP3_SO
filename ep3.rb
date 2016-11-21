@@ -131,7 +131,7 @@ loop do
           "executa <intervalo>: \t\texecuta o simulador e imprime o estado " \
           "de memorias na tela de <intervalo> em <intervalo> segundos\n" \
           "\n" \
-          "sai: \t\tfinaliza o simulador"
+          "sai: \t\tfinaliza o simulador" \
           "\n\n"
   end
 end
