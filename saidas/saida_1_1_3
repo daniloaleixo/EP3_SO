@@ -1,0 +1,10 @@
+/home/danilo/Dropbox/Fac/Sistemas Operacionais_v2/EP3/EP3_SO/memory_manager.rb:124:in `write': Interrupt
+	from /home/danilo/Dropbox/Fac/Sistemas Operacionais_v2/EP3/EP3_SO/memory_manager.rb:124:in `<<'
+	from /home/danilo/Dropbox/Fac/Sistemas Operacionais_v2/EP3/EP3_SO/memory_manager.rb:124:in `block in update_memory_files'
+	from /home/danilo/Dropbox/Fac/Sistemas Operacionais_v2/EP3/EP3_SO/memory_manager.rb:123:in `open'
+	from /home/danilo/Dropbox/Fac/Sistemas Operacionais_v2/EP3/EP3_SO/memory_manager.rb:123:in `update_memory_files'
+	from ./ep3.rb:101:in `block (2 levels) in <main>'
+	from ./ep3.rb:86:in `each'
+	from ./ep3.rb:86:in `block in <main>'
+	from ./ep3.rb:75:in `each'
+	from ./ep3.rb:75:in `<main>'

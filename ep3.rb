@@ -52,7 +52,6 @@ page_replacement_mode = 1
     MemoryManager.start process_list
     
   # when "espaco"
-  p option
     MemoryManager.memory_management_mode = option[1].to_i
 
   # when "substitui"
