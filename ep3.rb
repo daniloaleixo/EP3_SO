@@ -110,7 +110,7 @@ loop do
     pid_dictionary = {}
     memory_segments_list = nil
 
-    MemoryManager.clean     
+    MemoryManager.clean
   else
     print "Comando inválido\n" \
           "Comandos: \ncarrega <arquivo>: \tcarrega arquivo para a simulação\n" \
