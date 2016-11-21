@@ -498,7 +498,6 @@ class MemoryManager
     # da memória física.
     @@physical_memory[physical_index] = page.pid
 
-    # TODO LEMBRAR QUE S É DIFERENTE DE P
     @@physical_memory_page_reference[physical_index] = page_position
   end
 
@@ -560,8 +559,6 @@ class MemoryManager
 
     print "Estado da memória física:\n"
     print "#{@@physical_memory.map { |n| n.to_s.rjust(4) * @@p }.join("\n")}\n"
-    # TODO linha abaixo é só pra depuração - remover antes de entregar
-    print @@physical_memory_page_reference.map { |n| n.to_s.rjust(4) }.join
     print "\n#{'-' * 100}\n"
   end
 
